@@ -198,22 +198,34 @@ const EventDetail = () => {
                      ></iframe>
                    </div>
 
-                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-secondary/20 p-4 rounded-lg border border-border/50">
-                      <div className="flex items-center gap-3 text-muted-foreground">
-                         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border shadow-sm shrink-0">
-                            <MapPin className="w-5 h-5 text-primary" />
-                         </div>
-                         <div>
-                            <span className="font-semibold text-foreground block break-all">{event.venue}</span>
-                            <span className="text-xs">Tap button to navigate</span>
-                         </div>
+                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-secondary/30 dark:bg-secondary/10 p-4 rounded-xl border border-border/50 backdrop-blur-sm transition-colors duration-300">
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      {/* Dynamic Icon Container: Removed bg-white, added card background */}
+                      <div className="w-12 h-12 rounded-2xl bg-background dark:bg-card flex items-center justify-center border border-border shadow-sm shrink-0">
+                        <MapPin className="w-6 h-6 text-primary" />
                       </div>
-                      <Button asChild variant="outline" className="shrink-0 gap-2 font-medium bg-white hover:bg-gray-50 text-foreground border-gray-200">
-                        <a href={event.mapUrl} target="_blank" rel="noopener noreferrer">
-                          Open in Google Maps <ExternalLink className="w-4 h-4" /> 
-                        </a>
-                      </Button>
-                   </div>
+                      
+                      <div>
+                        <span className="font-bold text-foreground block break-all leading-tight">
+                          {event.venue}
+                        </span>
+                        <span className="text-xs text-muted-foreground/80 dark:text-muted-foreground">
+                          Tap button to navigate
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Dynamic Button: Removed hardcoded whites and grays */}
+                    <Button 
+                      asChild 
+                      variant="outline" 
+                      className="w-full sm:w-auto shrink-0 gap-2 font-semibold shadow-sm hover:shadow-md transition-all active:scale-95 border-border dark:hover:bg-secondary/50"
+                    >
+                      <a href={event.mapUrl} target="_blank" rel="noopener noreferrer">
+                        Open in Google Maps <ExternalLink className="w-4 h-4" /> 
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               )}
 

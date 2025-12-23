@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route } from "react-router-dom"; 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/theme-provider"; // 👈 Import your Theme Provider
+
 import Index from "./pages/Index";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
@@ -31,51 +33,53 @@ import ForgotPassword from './pages/ForgotPassword';
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/:id" element={<EventDetail />} />
-          <Route path="/speakers" element={<Speakers />} />
-          <Route path="/memories" element={<Memories />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-service" element={<TermsOfService />} />
-          <Route path="/auth" element={<Auth />} />
-          
-          {/* 👇 SHARED PROFILE ROUTE (Auto-adapts for Admin/Volunteer) */}
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme"> {/* 👈 Default is set to Dark */}
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/events/:id" element={<EventDetail />} />
+            <Route path="/speakers" element={<Speakers />} />
+            <Route path="/memories" element={<Memories />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* SHARED PROFILE ROUTE */}
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Admin routes */}
-          <Route path="/admin" element={<AdminOverview />} />
-          <Route path="/admin/events" element={<AdminEvents />} />
-          <Route path="/admin/events/:id/certificate" element={<CertificateDesigner />} />
-          <Route path="/admin/memories" element={<AdminMemories />} />
-          <Route path="/admin/speakers" element={<AdminSpeakers />} />
-          <Route path="/admin/registrations" element={<AdminRegistrations />} />
-          <Route path="/admin/volunteers" element={<AdminVolunteers />} />
-          <Route path="/admin/messages" element={<AdminMessages />} />
-          
-          {/* Volunteer routes */}
-          <Route path="/volunteer" element={<VolunteerPanel />} />
-          
-          {/* Ticket View */}
-          <Route path="/ticket/:tokenId" element={<TicketView />} />
-          
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminOverview />} />
+            <Route path="/admin/events" element={<AdminEvents />} />
+            <Route path="/admin/events/:id/certificate" element={<CertificateDesigner />} />
+            <Route path="/admin/memories" element={<AdminMemories />} />
+            <Route path="/admin/speakers" element={<AdminSpeakers />} />
+            <Route path="/admin/registrations" element={<AdminRegistrations />} />
+            <Route path="/admin/volunteers" element={<AdminVolunteers />} />
+            <Route path="/admin/messages" element={<AdminMessages />} />
+            
+            {/* Volunteer routes */}
+            <Route path="/volunteer" element={<VolunteerPanel />} />
+            
+            {/* Ticket View */}
+            <Route path="/ticket/:tokenId" element={<TicketView />} />
+            
+            {/* 404 Not Found */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
 );
 
 export default App;

@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* ✨ LIGHT MODE COLORS (These are already correct in your :root) */
+    /* ✨ LIGHT MODE COLORS */
     --background: 0 0% 100%;       /* White */
     --foreground: 222.2 84% 4.9%;  /* Dark Text */
     
@@ -35,7 +35,7 @@
     
     --radius: 0.5rem;
 
-    /* 👇 ADD THESE SIDEBAR VARIABLES */
+    /* SIDEBAR LIGHT */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -43,6 +43,47 @@
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* 🌙 DARK MODE COLORS (Slate/Deep Blue) */
+    --background: 222.2 84% 4.9%;    /* Deep Navy */
+    --foreground: 210 40% 98%;      /* Off-white text */
+    
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 217.2 91.2% 59.8%;   /* Bright Blue */
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    /* SIDEBAR DARK */
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -57,15 +98,24 @@
 }
 
 @layer utilities {
-  /* 👇 Updated Glass for Light Mode */
-  /* Using black/5 for border instead of white/10 so it's visible on white backgrounds */
+  /* 🪄 SMART GLASS CLASS */
+  /* Adapts automatically: Darker in Light mode, Brighter in Dark mode */
   .glass {
-    @apply bg-white/60 backdrop-blur-lg border border-black/5 shadow-lg;
+    @apply backdrop-blur-lg border transition-colors duration-300;
+    @apply bg-white/60 border-black/5 shadow-lg; /* Light Mode */
+    @apply dark:bg-black/40 dark:border-white/10; /* Dark Mode */
   }
   
-  /* 👇 Updated Glow for Light Mode */
-  /* Made slightly subtler for light backgrounds */
+  /* 🪄 SMART GLOW CLASS */
   .glow-box {
-    @apply shadow-[0_0_20px_rgba(59,130,246,0.25)] border-primary/20;
+    @apply border transition-all duration-300;
+    @apply shadow-[0_0_20px_rgba(59,130,246,0.25)] border-primary/20; /* Light Mode */
+    @apply dark:shadow-[0_0_30px_rgba(59,130,246,0.15)] dark:border-primary/40; /* Dark Mode */
+  }
+
+  /* 🪄 SMART GRADIENT TEXT */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600;
+    @apply dark:from-blue-400 dark:to-indigo-400;
   }
 }

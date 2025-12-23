@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react"; // 👈 Import Sun and Moon
+import { useTheme } from "@/components/theme-provider"; // 👈 Import useTheme hook
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -15,6 +16,7 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { theme, setTheme } = useTheme(); // 👈 Access theme state
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
@@ -47,9 +49,20 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* CTA Button (Desktop) */}
-          <div className="hidden md:block">
-            {/* 👇 UPDATED LINK: Filters for Upcoming Events */}
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-4">
+            {/* 👇 THEME TOGGLE BUTTON */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+
             <Link to="/events?filter=upcoming">
               <Button variant="glow" size="sm">
                 Register Now
@@ -57,18 +70,25 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2"
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle menu"
-          >
-            {isOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
+          {/* Mobile Menu Actions */}
+          <div className="flex md:hidden items-center gap-2">
+            {/* 👇 MOBILE THEME TOGGLE */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+
+            <button
+              className="p-2"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -90,8 +110,6 @@ export function Navbar() {
                 </Link>
               ))}
               
-              {/* CTA Button (Mobile) */}
-              {/* 👇 UPDATED LINK: Filters for Upcoming Events */}
               <Link to="/events?filter=upcoming" onClick={() => setIsOpen(false)}>
                 <Button variant="glow" className="w-full mt-2">
                   Register Now

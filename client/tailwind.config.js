@@ -3,7 +3,7 @@ export default {
   darkMode: ["class"],
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx}",     // 👈 This is the critical line!
+    "./src/**/*.{js,jsx}",
     "./src/pages/**/*.{js,jsx}",
     "./src/components/**/*.{js,jsx}",
   ],
