@@ -25,10 +25,11 @@ const createSpeaker = async (req, res) => {
       whatsappNumber 
     } = req.body;
 
-    // Handle Image Upload (Multer)
+    // Handle Image Upload (Cloudinary)
     let imageUrl = "";
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      // ✅ Cloudinary provides the full URL in .path
+      imageUrl = req.file.path;
     }
 
     const speaker = await Speaker.create({
@@ -66,7 +67,8 @@ const updateSpeaker = async (req, res) => {
 
       // Update Image ONLY if a new file is uploaded
       if (req.file) {
-        speaker.imageUrl = `/uploads/${req.file.filename}`;
+        // ✅ Cloudinary Logic: Update with new URL
+        speaker.imageUrl = req.file.path;
       }
 
       const updatedSpeaker = await speaker.save();

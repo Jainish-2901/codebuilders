@@ -1,38 +1,42 @@
 const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const path = require("path");
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, "uploads/"); // Files will be saved in 'server/uploads' folder
-  },
-  filename(req, file, cb) {
-    // Rename file to: fieldname-timestamp.extension
-    cb(
-      null,
-      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
-    );
+// 1. Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// 2. Storage Setup
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "codebuilders_events", // Cloudinary पर फोल्डर का नाम
+    allowed_formats: ["jpg", "png", "jpeg", "webp"], // Allowed formats
+    // transformation: [{ width: 800, height: 600, crop: "limit" }] // Optional: Resize settings
   },
 });
 
-// Check file type (optional but recommended)
-function checkFileType(file, cb) {
-  const filetypes = /jpg|jpeg|png|webp/;
+// 3. File Filter (Validation)
+const fileFilter = (req, file, cb) => {
+  const filetypes = /jpeg|jpg|png|webp/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);
 
   if (extname && mimetype) {
-    return cb(null, true);
+    cb(null, true);
   } else {
-    cb("Images only!");
+    cb(new Error("Only images are allowed!"), false);
   }
-}
+};
 
 const upload = multer({
-  storage,
-  fileFilter: function (req, file, cb) {
-    checkFileType(file, cb);
-  },
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
 module.exports = upload;

@@ -1,6 +1,5 @@
 const startCronJobs = require("./utils/cronJobs");
 const express = require("express");
-const path = require("path");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
@@ -30,7 +29,7 @@ const app = express();
 // --- SECURITY MIDDLEWARES START ---
 
 // 1. Set Security Headers
-// We enable crossOriginResourcePolicy to allow your React app (port 5173) to load images from here (port 5000)
+// We enable crossOriginResourcePolicy to allow resources to be loaded from cross-origin
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
@@ -44,7 +43,7 @@ app.use(cors({
 // 3. Rate Limiting Logic
 
 // A. Strict Limiter for Authentication (Prevents Brute Force)
-// Allows only 5 attempts every 15 minutes
+// Allows only 100 attempts every 15 minutes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
@@ -89,9 +88,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/volunteers", volunteerRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/messages", messageRoutes);
-
-// Serve Static Images
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.send("API is running...");

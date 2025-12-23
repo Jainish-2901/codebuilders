@@ -6,12 +6,14 @@ const speakerSchema = mongoose.Schema(
     role: { type: String, required: true }, // e.g., "Senior Engineer @ Google"
     specialty: { type: String, required: true }, // e.g., "React & TypeScript"
     bio: { type: String },
-    imageUrl: { type: String }, // Stores "/uploads/filename.jpg"
     
-    // Social Links (Updated)
+    // Stores Full Cloudinary URL now (e.g., https://res.cloudinary.com/...)
+    imageUrl: { type: String }, 
+    
+    // Social Links
     linkedinUrl: { type: String },
     githubUrl: { type: String },
-    whatsappNumber: { type: String }, // 👈 Added WhatsApp, Removed Twitter
+    whatsappNumber: { type: String }, 
   },
   { timestamps: true }
 );

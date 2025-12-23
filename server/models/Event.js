@@ -39,7 +39,7 @@ const eventSchema = mongoose.Schema(
     
     // --- Images ---
     imageUrl: {
-      type: String, // Main Event Thumbnail: "/uploads/filename.jpg"
+      type: String, // Stores Full Cloudinary URL (https://res.cloudinary.com/...)
     },
     
     // Legacy simple gallery (Keep this if you use it elsewhere, or migrate to memories)
@@ -52,8 +52,8 @@ const eventSchema = mongoose.Schema(
     // Memories Gallery (for the Admin Upload & Memories Page)
     memories: [
       {
-        url: { type: String, required: true },
-        publicId: { type: String }, // Stores filename for local deletion
+        url: { type: String, required: true }, // Full Cloudinary URL
+        publicId: { type: String }, // Cloudinary Public ID (Critical for deletion)
         uploadedAt: { type: Date, default: Date.now }
       }
     ],
@@ -63,8 +63,6 @@ const eventSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
-
-    // ❌ Certificate Logic REMOVED
   },
   {
     timestamps: true,

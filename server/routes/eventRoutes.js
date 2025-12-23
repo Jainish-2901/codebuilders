@@ -14,10 +14,10 @@ const {
 const { protect, admin } = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware"); 
 
-// Define which fields contain files for Create/Update Event
-// ❌ Removed 'certFile' - only handling event cover image now
+// Define upload configuration for Create/Update Event
+// We use .fields() because the controller checks req.files.image
 const uploadFields = upload.fields([
-  { name: 'image', maxCount: 1 }
+  { name: 'image', maxCount: 1 } 
 ]);
 
 // --- Standard Event Routes ---
@@ -38,7 +38,7 @@ router.route("/:id/memories")
   .post(
     protect, 
     admin, 
-    upload.array('images', 10), 
+    upload.array('images', 10), // Cloudinary allows up to 10 images per batch here
     uploadEventMemories
   );
 

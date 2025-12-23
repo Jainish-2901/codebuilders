@@ -1,7 +1,6 @@
 const Event = require("../models/Event");
 const Registration = require("../models/Registration"); 
-const fs = require('fs');
-const path = require('path');
+const cloudinary = require("cloudinary").v2; // ✅ Imported for deleting images
 
 // @desc    Create an event
 // @route   POST /api/events
@@ -21,8 +20,9 @@ const createEvent = async (req, res) => {
 
     let imageUrl = null;
 
+    // ✅ Cloudinary Logic: Use .path (Full URL)
     if (req.files && req.files.image) {
-      imageUrl = `/uploads/${req.files.image[0].filename}`;
+      imageUrl = req.files.image[0].path; 
     }
 
     const event = await Event.create({
@@ -33,7 +33,7 @@ const createEvent = async (req, res) => {
       dateTime,
       maxAttendees,
       status,
-      imageUrl,
+      imageUrl, // Saved Cloudinary URL
       mapUrl,
       isRegistrationEnabled: isRegistrationEnabled === "true",
       memories: []
@@ -68,8 +68,10 @@ const updateEvent = async (req, res) => {
          event.isRegistrationEnabled = req.body.isRegistrationEnabled === "true";
       }
 
+      // ✅ Cloudinary Logic: Update with new URL
       if (req.files && req.files.image) {
-        event.imageUrl = `/uploads/${req.files.image[0].filename}`;
+        // Optional: You could delete the old image from Cloudinary here if you stored the public_id
+        event.imageUrl = req.files.image[0].path;
       }
       
       const updatedEvent = await event.save();
@@ -129,7 +131,7 @@ const deleteEvent = async (req, res) => {
 };
 
 // ---------------------------------------------------------
-// 👇 MEMORIES FUNCTIONS
+// 👇 MEMORIES FUNCTIONS (UPDATED FOR CLOUDINARY)
 // ---------------------------------------------------------
 
 const getEventMemories = async (req, res) => {
@@ -151,11 +153,10 @@ const uploadEventMemories = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
 
-    const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
-    
+    // ✅ Cloudinary Logic: Map the direct .path URL
     const newMemories = req.files.map(file => ({
-      url: baseUrl + file.filename,
-      publicId: file.filename 
+      url: file.path,       // Public URL (https://res.cloudinary...)
+      publicId: file.filename // Cloudinary ID (Used for deletion)
     }));
 
     event.memories.push(...newMemories);
@@ -178,10 +179,13 @@ const deleteEventMemory = async (req, res) => {
     const memory = event.memories.id(imageId);
     if (!memory) return res.status(404).json({ message: "Image not found" });
 
+    // ✅ Cloudinary Logic: Delete from Cloud Storage
     if (memory.publicId) {
-       const filePath = path.join(__dirname, '../uploads', memory.publicId);
-       if (fs.existsSync(filePath)) {
-         fs.unlinkSync(filePath);
+       try {
+         await cloudinary.uploader.destroy(memory.publicId);
+       } catch (err) {
+         console.error("Cloudinary Delete Error:", err);
+         // We continue even if cloud delete fails, to remove DB reference
        }
     }
 
