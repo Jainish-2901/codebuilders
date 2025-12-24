@@ -48,7 +48,7 @@ app.use(cors({
 
 // 3. Rate Limiting Logic
 
-// A. Strict Limiter for Authentication
+// A. Strict Limiter for Authenticationx          
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
   max: 100,

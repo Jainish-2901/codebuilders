@@ -1,34 +1,47 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-
-// 1. Auth Middleware Import
-const { protect, admin } = require('../middleware/authMiddleware');
-
-// 2. ✅ Import Your New Cloudinary Middleware
-// (Ab humein yaha alag se multer setup karne ki jarurat nahi hai)
-const upload = require('../middleware/uploadMiddleware');
-
-// 3. Controller Import
 const {
-  getSpeakers,
-  createSpeaker,
-  updateSpeaker,
-  deleteSpeaker
-} = require('../controllers/speakerController');
+  registerForEvent,
+  getTicketByToken,
+  getAllRegistrations,
+  getRecentRegistrations,
+  checkInRegistration,
+  updateAttendance,
+  deleteRegistration,
+} = require("../controllers/registrationController");
 
-// 4. Routes Define
+// Auth Middleware
+const { protect, admin } = require("../middleware/authMiddleware");
 
-// Public: Get all speakers
-router.get('/', getSpeakers);
+// ==================================================================
+// ✅ PUBLIC ROUTES (No Login Required)
+// ==================================================================
 
-// Admin: Create Speaker
-// 'upload.single' ab file ko seedha Cloudinary par bhej dega
-router.post('/', protect, admin, upload.single('image'), createSpeaker);
+// 1. Create Registration (Guest User Allowed)
+// ⚠️ Yahan se 'protect' hata diya gaya hai. Ab bina login ke form submit hoga.
+router.post("/", registerForEvent);
 
-// Admin: Update Speaker
-router.put('/:id', protect, admin, upload.single('image'), updateSpeaker);
+// 2. View Ticket (Guest User Allowed)
+router.get("/ticket/:tokenId", getTicketByToken);
 
-// Admin: Delete Speaker
-router.delete('/:id', protect, admin, deleteSpeaker);
+
+// ==================================================================
+// 🔒 ADMIN / PROTECTED ROUTES (Login Required)
+// ==================================================================
+
+// Get All Registrations (Admin Only)
+router.get("/", protect, admin, getAllRegistrations);
+
+// Get Recent Activity (Admin Only)
+router.get("/recent", protect, admin, getRecentRegistrations);
+
+// Check-in User (Volunteer/Admin)
+router.put("/checkin/:tokenId", protect, checkInRegistration);
+
+// Toggle Attendance (Volunteer/Admin)
+router.put("/:id/attendance", protect, updateAttendance); 
+
+// Delete Registration (Admin Only)
+router.delete("/:id", protect, admin, deleteRegistration);
 
 module.exports = router;
