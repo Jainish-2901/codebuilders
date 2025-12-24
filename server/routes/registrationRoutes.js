@@ -1,29 +1,34 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+
+// 1. Auth Middleware Import
+const { protect, admin } = require('../middleware/authMiddleware');
+
+// 2. ✅ Import Your New Cloudinary Middleware
+// (Ab humein yaha alag se multer setup karne ki jarurat nahi hai)
+const upload = require('../middleware/uploadMiddleware');
+
+// 3. Controller Import
 const {
-  registerForEvent,
-  getTicketByToken, 
-  getEventRegistrations,
-  getAllRegistrations,
-  checkInRegistration,
-  updateAttendance,
-  deleteRegistration,
-} = require("../controllers/registrationController");
-const { protect, admin } = require("../middleware/authMiddleware");
+  getSpeakers,
+  createSpeaker,
+  updateSpeaker,
+  deleteSpeaker
+} = require('../controllers/speakerController');
 
-// Public: Register for an event
-router.post("/", registerForEvent);
+// 4. Routes Define
 
-// Public: View Ticket Details (for the frontend Ticket View page)
-router.get("/ticket/:tokenId", getTicketByToken);
+// Public: Get all speakers
+router.get('/', getSpeakers);
 
-// Check-in (Protected for Admin/Volunteer use)
-router.put("/checkin/:tokenId", protect, checkInRegistration);
+// Admin: Create Speaker
+// 'upload.single' ab file ko seedha Cloudinary par bhej dega
+router.post('/', protect, admin, upload.single('image'), createSpeaker);
 
-// Admin/Volunteer Routes
-router.get("/", protect, getAllRegistrations);
-router.get("/event/:eventId", protect, getEventRegistrations);
-router.put("/:id/attendance", protect, updateAttendance); 
-router.delete("/:id", protect, admin, deleteRegistration);
+// Admin: Update Speaker
+router.put('/:id', protect, admin, upload.single('image'), updateSpeaker);
+
+// Admin: Delete Speaker
+router.delete('/:id', protect, admin, deleteSpeaker);
 
 module.exports = router;

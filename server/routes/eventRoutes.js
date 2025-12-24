@@ -12,6 +12,8 @@ const {
 } = require("../controllers/eventController");
 
 const { protect, admin } = require("../middleware/authMiddleware");
+
+// ✅ Import your Cloudinary Middleware directly
 const upload = require("../middleware/uploadMiddleware"); 
 
 // Define upload configuration for Create/Update Event
@@ -38,7 +40,8 @@ router.route("/:id/memories")
   .post(
     protect, 
     admin, 
-    upload.array('images', 10), // Cloudinary allows up to 10 images per batch here
+    // ✅ Use the same middleware for array uploads
+    upload.array('images', 10), 
     uploadEventMemories
   );
 

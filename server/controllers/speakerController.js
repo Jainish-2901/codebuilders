@@ -1,4 +1,15 @@
 const Speaker = require("../models/Speaker");
+const cloudinary = require("cloudinary").v2;
+
+// 1️⃣ Cloudinary Config (Only needed here for Deletion logic)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// ❌ Removed: streamifier and uploadToCloudinary helper function
+// (Your middleware now handles uploads automatically)
 
 // @desc    Get all speakers
 // @route   GET /api/speakers
@@ -16,20 +27,15 @@ const getSpeakers = async (req, res) => {
 const createSpeaker = async (req, res) => {
   try {
     const { 
-      name, 
-      role, 
-      specialty, 
-      bio, 
-      linkedinUrl, 
-      githubUrl, 
-      whatsappNumber 
+      name, role, specialty, bio, linkedinUrl, githubUrl, whatsappNumber 
     } = req.body;
 
-    // Handle Image Upload (Cloudinary)
     let imageUrl = "";
+
+    // ✅ UPDATED: Get URL directly from Middleware
+    // Middleware uploads the file and puts the details in req.file
     if (req.file) {
-      // ✅ Cloudinary provides the full URL in .path
-      imageUrl = req.file.path;
+      imageUrl = req.file.path; // Cloudinary URL
     }
 
     const speaker = await Speaker.create({
@@ -40,11 +46,12 @@ const createSpeaker = async (req, res) => {
       linkedinUrl,
       githubUrl,
       whatsappNumber,
-      imageUrl,
+      imageUrl, // Saved as full URL
     });
 
     res.status(201).json(speaker);
   } catch (error) {
+    console.error("Error creating speaker:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -56,7 +63,6 @@ const updateSpeaker = async (req, res) => {
     const speaker = await Speaker.findById(req.params.id);
 
     if (speaker) {
-      // Update Text Fields (Use existing value if new one isn't provided)
       speaker.name = req.body.name || speaker.name;
       speaker.role = req.body.role || speaker.role;
       speaker.specialty = req.body.specialty || speaker.specialty;
@@ -65,10 +71,12 @@ const updateSpeaker = async (req, res) => {
       speaker.githubUrl = req.body.githubUrl || speaker.githubUrl;
       speaker.whatsappNumber = req.body.whatsappNumber || speaker.whatsappNumber;
 
-      // Update Image ONLY if a new file is uploaded
+      // ✅ UPDATED: Update Image
       if (req.file) {
-        // ✅ Cloudinary Logic: Update with new URL
-        speaker.imageUrl = req.file.path;
+        // Optional: If you want to delete the OLD image from Cloudinary, 
+        // you would need to store the public_id in your DB or extract it from the old URL.
+        
+        speaker.imageUrl = req.file.path; // Update with new URL
       }
 
       const updatedSpeaker = await speaker.save();
@@ -77,6 +85,7 @@ const updateSpeaker = async (req, res) => {
       res.status(404).json({ message: "Speaker not found" });
     }
   } catch (error) {
+    console.error("Error updating speaker:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -87,6 +96,18 @@ const deleteSpeaker = async (req, res) => {
   try {
     const speaker = await Speaker.findById(req.params.id);
     if (speaker) {
+      
+      // ✅ Optional: Delete image from Cloudinary
+      // This extracts "folder/filename" from "https://res.cloudinary.com/.../folder/filename.jpg"
+      if (speaker.imageUrl) {
+        try {
+            const publicId = speaker.imageUrl.split('/').slice(-2).join('/').split('.')[0];
+            await cloudinary.uploader.destroy(publicId);
+        } catch (err) {
+            console.error("Failed to delete image from Cloudinary:", err);
+        }
+      }
+
       await speaker.deleteOne();
       res.json({ message: "Speaker removed" });
     } else {
