@@ -16,7 +16,6 @@ class ApiClient {
     };
 
     // ⚠️ CRITICAL: Only set JSON Content-Type if NOT sending FormData.
-    // Browser automatically sets Content-Type: multipart/form-data with boundary for FormData.
     if (!(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
@@ -33,7 +32,6 @@ class ApiClient {
       if (response.status === 401) {
         console.warn('[API] 401 Unauthorized - Session expired or invalid.');
         
-        // Only clear and redirect if we aren't already on the auth page
         if (token) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -45,7 +43,6 @@ class ApiClient {
         throw new Error('Session expired. Please login again.');
       }
 
-      // Handle empty responses (like 204 No Content) to prevent JSON parse errors
       if (response.status === 204) {
         return null;
       }
@@ -83,17 +80,14 @@ class ApiClient {
       window.location.href = '/auth'; 
   }
 
-  // Update Profile Name
   async updateProfile(data) {
     return this.request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) });
   }
 
-  // Change Password
   async changePassword(data) {
     return this.request('/auth/profile/password', { method: 'PUT', body: JSON.stringify(data) });
   }
 
-  // Forgot Password - Request OTP
   async requestPasswordReset(email) {
     return this.request('/auth/forgot-password', { 
       method: 'POST', 
@@ -101,7 +95,6 @@ class ApiClient {
     });
   }
 
-  // Forgot Password - Verify OTP & Reset
   async resetPassword(email, otp, newPassword) {
     return this.request('/auth/reset-password', { 
       method: 'POST', 
@@ -122,7 +115,6 @@ class ApiClient {
     return this.request(`/events/${id}`);
   }
 
-  // ✅ FormData logic is handled automatically in request() above
   async createEvent(eventData) {
     const body = eventData instanceof FormData ? eventData : JSON.stringify(eventData);
     return this.request('/events', { method: 'POST', body });
@@ -160,7 +152,6 @@ class ApiClient {
   }
   
   async createSpeaker(speakerData) {
-    // Check if it's FormData (for images) or JSON
     const body = speakerData instanceof FormData ? speakerData : JSON.stringify(speakerData);
     return this.request('/speakers', { method: 'POST', body });
   }
@@ -175,12 +166,31 @@ class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
-  // 🎟️ REGISTRATIONS
+  // 🎟️ REGISTRATIONS (✅ UPDATED)
   // ---------------------------------------------------------------------------
   
-  async getAllRegistrations(eventId) { 
-    const query = eventId && eventId !== 'all' ? `?eventId=${eventId}` : '';
-    return this.request(`/registrations${query}`); 
+  // Updated to support Page, Search, Limit (Batches), and EventID
+  async getAllRegistrations(page = 1, search = '', limit = 10, eventId = null) { 
+    // Using URLSearchParams to handle query string cleanly
+    const params = new URLSearchParams();
+    
+    params.append('page', page);
+    params.append('limit', limit); // Can be number (10) or string ('all')
+    
+    if (search) {
+        params.append('search', search);
+    }
+    
+    if (eventId && eventId !== 'all') {
+        params.append('eventId', eventId);
+    }
+
+    return this.request(`/registrations?${params.toString()}`); 
+  }
+
+  // ✅ NEW: Fetch recent registrations (Top 5)
+  async getRecentRegistrations() {
+    return this.request('/registrations/recent');
   }
 
   async toggleRegistrationAttendance(id, isAttended) {
@@ -215,7 +225,7 @@ class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
-  // 🖼️ MEMORIES / GALLERY (Uses Cloudinary)
+  // 🖼️ MEMORIES / GALLERY
   // ---------------------------------------------------------------------------
   
   async getEventMemories(eventId) {
@@ -223,7 +233,6 @@ class ApiClient {
   }
 
   async uploadEventMemories(eventId, formData) {
-    // formData MUST be an instance of FormData containing 'images' field
     return this.request(`/events/${eventId}/memories`, {
       method: 'POST',
       body: formData

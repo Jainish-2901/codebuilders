@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/integrations/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Users, UserCheck, TrendingUp, Loader2, UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, Users, UserCheck, TrendingUp, Loader2, UserPlus, Ticket, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { format } from 'date-fns'; // Ensure you have date-fns installed
+import { format } from 'date-fns';
 
 export default function AdminOverview() {
+  const [page, setPage] = useState(1); // ✅ Track current page
+
   // 1. Fetch Stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-stats'],
@@ -14,16 +18,18 @@ export default function AdminOverview() {
     },
   });
 
-  // 2. Fetch Recent Registrations
-  const { data: recentRegistrations, isLoading: regLoading } = useQuery({
-    queryKey: ['recent-registrations'],
+  // 2. Fetch Registrations (Paginated: Limit 10)
+  const { data: registrationData, isLoading: regLoading } = useQuery({
+    queryKey: ['overview-registrations', page], // ✅ Page change triggers refetch
     queryFn: async () => {
-        const data = await apiClient.getAllRegistrations();
-        // Sort by newest first (assuming API doesn't sort) and take top 5
-        // Note: It's better to sort on backend, but this works for small datasets
-        return data?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5) || [];
+        // Fetch page 'page', empty search, limit 10
+        return await apiClient.getAllRegistrations(page, '', 10);
     },
+    keepPreviousData: true,
   });
+
+  const recentRegistrations = registrationData?.registrations || [];
+  const totalPages = registrationData?.pages || 1;
 
   const statCards = [
     { 
@@ -36,7 +42,7 @@ export default function AdminOverview() {
     { 
       title: 'Total Registrations', 
       value: stats?.totalRegistrations ?? 0, 
-      icon: Ticket, // or Users
+      icon: Ticket, 
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10'
     },
@@ -93,13 +99,16 @@ export default function AdminOverview() {
           ))}
         </div>
 
-        {/* Recent Registrations Table */}
+        {/* Registrations List (Paginated) */}
         <Card className="glass border-border/50 shadow-sm">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-xl">
               <TrendingUp className="w-5 h-5 text-primary" />
-              Recent Activity
+              Recent Registrations
             </CardTitle>
+            <div className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+            </div>
           </CardHeader>
           <CardContent>
             {recentRegistrations && recentRegistrations.length > 0 ? (
@@ -130,15 +139,64 @@ export default function AdminOverview() {
               </div>
             ) : (
               <div className="text-center py-10">
-                  <p className="text-muted-foreground">No registrations found yet.</p>
+                  <p className="text-muted-foreground">No registrations found.</p>
               </div>
             )}
+
+            {/* ✅ PAGINATION CONTROLS */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-6">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    {/* Page Numbers Logic */}
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                            // Only show current, first, last, and neighbors
+                            if (
+                                totalPages > 8 &&
+                                Math.abs(page - pageNum) > 1 &&
+                                pageNum !== 1 &&
+                                pageNum !== totalPages
+                            ) {
+                                if (Math.abs(page - pageNum) === 2) return <span key={pageNum} className="px-1">...</span>;
+                                return null;
+                            }
+
+                            return (
+                                <Button
+                                    key={pageNum}
+                                    variant={page === pageNum ? "default" : "ghost"}
+                                    size="sm"
+                                    onClick={() => setPage(pageNum)}
+                                    className="w-8 h-8 p-0"
+                                >
+                                    {pageNum}
+                                </Button>
+                            );
+                        })}
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
+
           </CardContent>
         </Card>
       </div>
     </AdminLayout>
   );
 }
-
-// Helper import for icons if missing in top import
-import { Ticket } from 'lucide-react';

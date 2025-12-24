@@ -108,9 +108,9 @@ const registerForEvent = async (req, res) => {
   }
 };
 
-// ... keep your other exports (getTicketByToken, etc.) as they are ...
+// @desc    Get Ticket details by Token
+// @route   GET /api/registrations/ticket/:tokenId
 const getTicketByToken = async (req, res) => {
-    // ... your existing code
     try {
         const registration = await Registration.findOne({ tokenId: req.params.tokenId })
           .populate("eventId", "title venue dateTime fullDescription"); 
@@ -124,8 +124,9 @@ const getTicketByToken = async (req, res) => {
       }
 };
 
+// @desc    Get registrations for a specific event
+// @route   GET /api/registrations/event/:eventId
 const getEventRegistrations = async (req, res) => {
-    // ... your existing code
     try {
         const registrations = await Registration.find({ eventId: req.params.eventId });
         res.json(registrations);
@@ -134,24 +135,96 @@ const getEventRegistrations = async (req, res) => {
       }
 };
 
+// =========================================================
+// ✅ UPDATED: Robust Filter Logic & Debugging
+// =========================================================
+// @route   GET /api/registrations
 const getAllRegistrations = async (req, res) => {
-    // ... your existing code
-    try {
-        let query = {};
-        if (req.query.eventId && req.query.eventId !== 'all') {
-          query.eventId = req.query.eventId;
-        }
-        const registrations = await Registration.find(query)
-          .populate("eventId", "title dateTime") 
-          .sort({ createdAt: -1 });
-        res.json(registrations);
-      } catch (error) {
-        res.status(500).json({ message: error.message });
-      }
+  try {
+    // 👇 DEBUG LOGS: Check your terminal to see what the backend receives
+    console.log("🔔 API Call: getAllRegistrations");
+    console.log("📥 Query Params:", req.query);
+
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+    const eventId = req.query.eventId;
+    
+    // Build Filter Query
+    let queryObj = {};
+
+    // 1. Search Filter (Validate string is not "undefined" or empty)
+    if (search && search !== "undefined" && search !== "") {
+      queryObj.$or = [
+        { userName: { $regex: search, $options: "i" } },
+        { userEmail: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // 2. Event Filter (Strict validation)
+    // Sometimes frontend sends string "undefined" or "null" which breaks DB query
+    if (eventId && eventId !== 'all' && eventId !== 'undefined' && eventId !== 'null') {
+      queryObj.eventId = eventId;
+    }
+
+    console.log("🔍 Applied Database Filters:", queryObj);
+
+    // Count Total Documents matching filter
+    const count = await Registration.countDocuments(queryObj);
+    console.log("📊 Total Records Found:", count);
+
+    // Prepare Database Query
+    let dbQuery = Registration.find(queryObj)
+      .populate("eventId", "title dateTime") 
+      .sort({ createdAt: -1 });
+
+    // ✅ LOGIC: Apply Pagination ONLY if limit is NOT 'all'
+    if (req.query.limit !== 'all') {
+       const skip = (page - 1) * limit;
+       console.log(`🚀 Applying Limit: ${limit}, Skip: ${skip}`);
+       dbQuery = dbQuery.limit(limit).skip(skip);
+    } else {
+       console.log("🚀 Fetching ALL records (No Limit)");
+    }
+
+    const registrations = await dbQuery;
+    console.log(`✅ Returning ${registrations.length} registrations to frontend`);
+
+    res.json({
+      registrations,
+      page,
+      pages: req.query.limit === 'all' ? 1 : Math.ceil(count / limit),
+      total: count,
+    });
+  } catch (error) {
+    console.error("❌ Error in getAllRegistrations:", error);
+    res.status(500).json({ message: error.message });
+  }
 };
 
+// =========================================================
+// ✅ NEW: Get Recent Registrations (Top 5)
+// =========================================================
+// @route   GET /api/registrations/recent
+const getRecentRegistrations = async (req, res) => {
+  try {
+    // Filter logic removed here to ensure we get *ANY* recent registration
+    const recentRegistrations = await Registration.find({})
+      .sort({ createdAt: -1 }) // Newest first
+      .limit(5)                // Only top 5
+      .populate("eventId", "title"); 
+    
+    console.log(`🔔 API Call: getRecentRegistrations - Found ${recentRegistrations.length}`);
+    res.json(recentRegistrations);
+  } catch (error) {
+    console.error("Error fetching recent registrations:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// @desc    Check-in User (Update status)
+// @route   PUT /api/registrations/checkin/:tokenId
 const checkInRegistration = async (req, res) => {
-    // ... your existing code
     try {
         const registration = await Registration.findOne({ tokenId: req.params.tokenId });
         if (registration) {
@@ -173,8 +246,9 @@ const checkInRegistration = async (req, res) => {
       }
 };
 
+// @desc    Toggle Attendance
+// @route   PUT /api/registrations/:id/attendance
 const updateAttendance = async (req, res) => {
-    // ... your existing code
     try {
         const registration = await Registration.findById(req.params.id);
         if (registration) {
@@ -190,8 +264,9 @@ const updateAttendance = async (req, res) => {
       }
 };
 
+// @desc    Delete Registration
+// @route   DELETE /api/registrations/:id
 const deleteRegistration = async (req, res) => {
-    // ... your existing code
     try {
         const registration = await Registration.findById(req.params.id);
         if (registration) {
@@ -210,6 +285,7 @@ module.exports = {
   getTicketByToken,
   getEventRegistrations,
   getAllRegistrations,
+  getRecentRegistrations,
   checkInRegistration,
   updateAttendance,
   deleteRegistration,

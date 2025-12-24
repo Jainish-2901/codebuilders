@@ -16,7 +16,7 @@ import {
   Ticket, 
   ExternalLink,
   RefreshCcw,
-  Download // 👈 IMPORTED
+  Download 
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -32,15 +32,24 @@ export default function AdminRegistrations() {
     queryFn: () => apiClient.getEvents(),
   });
 
-  // 2. Fetch Registrations (Live Updates Enabled)
-  const { data: registrations, isLoading, isRefetching, refetch } = useQuery({
+  // 2. Fetch ALL Registrations (limit='all')
+  const { data: apiResponse, isLoading, isRefetching, refetch } = useQuery({
     queryKey: ['admin-registrations', selectedEvent],
-    queryFn: () => apiClient.getAllRegistrations(selectedEvent),
-    refetchInterval: 5000, // 👈 AUTO-UPDATE: Polls server every 5 seconds
+    queryFn: () => {
+        // ✅ FIX: Pass arguments correctly: page=1, search='', limit='all', eventId
+        // If selectedEvent is 'all', pass null or let backend handle 'all' string logic
+        const eventIdParam = selectedEvent === 'all' ? null : selectedEvent;
+        return apiClient.getAllRegistrations(1, '', 'all', eventIdParam);
+    },
+    refetchInterval: 5000, 
   });
 
-  // 3. Search Filter
-  const filteredRegistrations = registrations?.filter(reg => 
+  // ✅ Extract the array from the new response object { registrations: [...], total: ... }
+  const registrations = apiResponse?.registrations || [];
+
+  // 3. Search Filter (Client-side)
+  // Since we fetched ALL data, we filter here instantly without reloading
+  const filteredRegistrations = registrations.filter(reg => 
     !searchTerm || 
     reg.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     reg.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,23 +68,19 @@ export default function AdminRegistrations() {
     },
   });
 
-  // 👇 NEW: Export to CSV Function
+  // Export to CSV Function
   const downloadCSV = () => {
     if (!filteredRegistrations || filteredRegistrations.length === 0) {
       toast({ title: "No data to export", variant: "destructive" });
       return;
     }
 
-    // 1. Define Headers
     const headers = ["Name", "Email", "Event Title", "Registration Date", "Token ID", "Status"];
 
-    // 2. Generate Rows
     const csvRows = [
       headers.join(","),
       ...filteredRegistrations.map(reg => {
-        // Helper to escape commas in data
         const safe = (text) => `"${String(text || "").replace(/"/g, '""')}"`;
-        
         return [
           safe(reg.userName),
           safe(reg.userEmail),
@@ -87,7 +92,6 @@ export default function AdminRegistrations() {
       })
     ];
 
-    // 3. Trigger Download
     const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -101,8 +105,8 @@ export default function AdminRegistrations() {
 
   // Stats
   const stats = {
-    total: filteredRegistrations?.length ?? 0,
-    attended: filteredRegistrations?.filter((r) => r.isAttended).length ?? 0,
+    total: filteredRegistrations.length,
+    attended: filteredRegistrations.filter((r) => r.isAttended).length,
   };
 
   return (
@@ -115,7 +119,7 @@ export default function AdminRegistrations() {
           </div>
           
           <div className="flex gap-2">
-            {/* 👇 NEW: Export Button */}
+            {/* Export Button */}
             <Button 
               variant="outline" 
               size="sm" 
@@ -191,7 +195,7 @@ export default function AdminRegistrations() {
         {/* Table */}
         <Card className="glass border-border">
           <CardContent className="p-0">
-            {isLoading && !registrations ? (
+            {isLoading && !apiResponse ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
@@ -208,7 +212,7 @@ export default function AdminRegistrations() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRegistrations?.map((reg) => (
+                  {filteredRegistrations.map((reg) => (
                     <TableRow key={reg._id} className={reg.isAttended ? "bg-emerald-500/5 transition-colors duration-500" : ""}>
                       <TableCell>
                         <div className="font-medium">{reg.userName}</div>
@@ -262,12 +266,12 @@ export default function AdminRegistrations() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {filteredRegistrations?.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
-                          No registrations found.
-                        </TableCell>
-                      </TableRow>
+                  {filteredRegistrations.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
+                        {searchTerm ? "No results found matching your search." : "No registrations found."}
+                      </TableCell>
+                    </TableRow>
                   )}
                 </TableBody>
               </Table>
