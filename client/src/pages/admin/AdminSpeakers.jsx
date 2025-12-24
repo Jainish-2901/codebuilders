@@ -29,14 +29,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Github, Linkedin, Phone } from 'lucide-react'; // 👈 Added Phone for WhatsApp
-
-const apiUrl = import.meta.env.VITE_API_URL;
+import { Plus, Pencil, Trash2, Loader2, Github, Linkedin, Phone } from 'lucide-react'; 
 
 export default function AdminSpeakers() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSpeaker, setEditingSpeaker] = useState(null);
-  const fileInputRef = useRef(null); // 👈 Ref for file input
+  const fileInputRef = useRef(null); 
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -48,7 +46,7 @@ export default function AdminSpeakers() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (formData) => { // 👈 Accepts FormData
+    mutationFn: async (formData) => { 
       return await apiClient.createSpeaker(formData);
     },
     onSuccess: () => {
@@ -62,7 +60,7 @@ export default function AdminSpeakers() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, formData }) => { // 👈 Accepts ID + FormData
+    mutationFn: async ({ id, formData }) => { 
       return await apiClient.updateSpeaker(id, formData);
     },
     onSuccess: () => {
@@ -92,7 +90,9 @@ export default function AdminSpeakers() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const form = e.currentTarget;
-    const formData = new FormData(form); // 👈 Capture file and text inputs automatically
+    const formData = new FormData(form); 
+
+    // Note: formData automatically handles the file input named 'image' which matches backend
 
     if (editingSpeaker) {
       updateMutation.mutate({ id: editingSpeaker._id, formData });
@@ -109,14 +109,6 @@ export default function AdminSpeakers() {
   const closeDialog = () => {
     setIsDialogOpen(false);
     setEditingSpeaker(null);
-  };
-
-  // Helper to display image correctly
-  const getImageUrl = (path) => {
-    if (!path) return "";
-    if (path.startsWith("http")) return path;
-    const baseUrl = apiUrl.replace('/api', '');
-    return `${baseUrl}${path}`;
   };
 
   return (
@@ -164,7 +156,7 @@ export default function AdminSpeakers() {
                   <Textarea id="bio" name="bio" defaultValue={editingSpeaker?.bio} rows={3} />
                 </div>
 
-                {/* 👇 CHANGED: File Upload Input */}
+                {/* File Upload Input */}
                 <div className="space-y-2">
                   <Label htmlFor="image">Profile Image</Label>
                   <div className="flex gap-2 items-center">
@@ -177,12 +169,15 @@ export default function AdminSpeakers() {
                       className="cursor-pointer"
                     />
                   </div>
+                  
+                  {/* ✅ Updated: Use direct Cloudinary URL */}
                   {editingSpeaker?.imageUrl && (
-                     <p className="text-xs text-muted-foreground">Current: <a href={getImageUrl(editingSpeaker.imageUrl)} target="_blank" className="underline">View Image</a></p>
+                     <p className="text-xs text-muted-foreground">
+                        Current: <a href={editingSpeaker.imageUrl} target="_blank" rel="noopener noreferrer" className="underline">View Image</a>
+                     </p>
                   )}
                 </div>
 
-                {/* 👇 CHANGED: Social Inputs (WhatsApp added, Twitter removed) */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
@@ -233,7 +228,8 @@ export default function AdminSpeakers() {
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage src={getImageUrl(speaker.imageUrl)} />
+                            {/* ✅ Updated: Use direct Cloudinary URL */}
+                            <AvatarImage src={speaker.imageUrl} />
                             <AvatarFallback>{speaker.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           {speaker.name}
@@ -242,7 +238,6 @@ export default function AdminSpeakers() {
                       <TableCell>{speaker.role}</TableCell>
                       <TableCell>{speaker.specialty}</TableCell>
                       
-                      {/* 👇 CHANGED: Display Icons */}
                       <TableCell>
                         <div className="flex gap-2">
                           {speaker.linkedinUrl && <Linkedin className="w-4 h-4 text-blue-500" />}

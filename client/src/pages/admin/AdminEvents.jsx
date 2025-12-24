@@ -33,8 +33,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Loader2, Ticket, Image as ImageIcon, MapPin } from 'lucide-react';
 import { format, isPast } from 'date-fns'; 
 
-const apiUrl = import.meta.env.VITE_API_URL;
-
 export default function AdminEvents() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -147,11 +145,12 @@ export default function AdminEvents() {
 
     // 2. Append Toggles
     formData.set('isRegistrationEnabled', String(regEnabled)); 
-    // removed certificate enabled append
-
+    
     // 3. Calc Status
     const status = new Date(finalIsoString) < new Date() ? 'past' : 'upcoming';
     formData.set('status', status);
+
+    // Note: formData already contains 'image' file input which matches backend configuration
 
     if (editingEvent) {
       updateMutation.mutate({ id: editingEvent._id, formData });
@@ -170,12 +169,6 @@ export default function AdminEvents() {
     setIsDialogOpen(false);
     setEditingEvent(null);
     setRegEnabled(true);
-  };
-
-  const getImageUrl = (path) => {
-    if (!path) return null;
-    const baseUrl = apiUrl.replace('/api', '');
-    return path.startsWith('http') ? path : `${baseUrl}${path}`;
   };
 
   return (
@@ -313,10 +306,17 @@ export default function AdminEvents() {
                   <div className="grid grid-cols-2 gap-4 items-start">
                     <div className="space-y-2">
                       <Label htmlFor="image">Event Image</Label>
+                      {/* Name 'image' matches backend upload.fields */}
                       <Input id="image" name="image" type="file" accept="image/*" ref={fileInputRef} />
+                      
+                      {/* ✅ Updated: Use direct Cloudinary URL */}
                       {editingEvent?.imageUrl && (
                         <div className="mt-2 w-24 h-24 rounded overflow-hidden border">
-                          <img src={getImageUrl(editingEvent.imageUrl)} alt="Current Event" className="w-full h-full object-cover" />
+                          <img 
+                            src={editingEvent.imageUrl} 
+                            alt="Current Event" 
+                            className="w-full h-full object-cover" 
+                          />
                         </div>
                       )}
                     </div>
@@ -369,8 +369,9 @@ export default function AdminEvents() {
                     return (
                       <TableRow key={event._id}>
                         <TableCell className="font-medium flex items-center gap-2">
+                           {/* ✅ Updated: Use direct Cloudinary URL */}
                           {event.imageUrl ? (
-                            <img src={getImageUrl(event.imageUrl)} className="w-8 h-8 rounded object-cover" alt="" />
+                            <img src={event.imageUrl} className="w-8 h-8 rounded object-cover" alt="" />
                           ) : (
                             <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center">
                               <ImageIcon className="w-4 h-4 text-muted-foreground" />
@@ -379,7 +380,6 @@ export default function AdminEvents() {
                           {event.title}
                         </TableCell>
                         
-                        {/* 12-Hour Format in Table */}
                         <TableCell>
                             {event.dateTime 
                                 ? format(new Date(event.dateTime), 'MMM d, yyyy h:mm a') 

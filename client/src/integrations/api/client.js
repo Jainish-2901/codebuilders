@@ -15,7 +15,8 @@ class ApiClient {
       ...(token && { Authorization: `Bearer ${token}` }),
     };
 
-    // Handle FormData vs JSON
+    // ⚠️ CRITICAL: Only set JSON Content-Type if NOT sending FormData.
+    // Browser automatically sets Content-Type: multipart/form-data with boundary for FormData.
     if (!(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
@@ -32,6 +33,7 @@ class ApiClient {
       if (response.status === 401) {
         console.warn('[API] 401 Unauthorized - Session expired or invalid.');
         
+        // Only clear and redirect if we aren't already on the auth page
         if (token) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -41,6 +43,11 @@ class ApiClient {
             }
         }
         throw new Error('Session expired. Please login again.');
+      }
+
+      // Handle empty responses (like 204 No Content) to prevent JSON parse errors
+      if (response.status === 204) {
+        return null;
       }
 
       const data = await response.json();
@@ -86,7 +93,7 @@ class ApiClient {
     return this.request('/auth/profile/password', { method: 'PUT', body: JSON.stringify(data) });
   }
 
-  // 👇 NEW: Forgot Password - Request OTP
+  // Forgot Password - Request OTP
   async requestPasswordReset(email) {
     return this.request('/auth/forgot-password', { 
       method: 'POST', 
@@ -94,7 +101,7 @@ class ApiClient {
     });
   }
 
-  // 👇 NEW: Forgot Password - Verify OTP & Reset
+  // Forgot Password - Verify OTP & Reset
   async resetPassword(email, otp, newPassword) {
     return this.request('/auth/reset-password', { 
       method: 'POST', 
@@ -115,6 +122,7 @@ class ApiClient {
     return this.request(`/events/${id}`);
   }
 
+  // ✅ FormData logic is handled automatically in request() above
   async createEvent(eventData) {
     const body = eventData instanceof FormData ? eventData : JSON.stringify(eventData);
     return this.request('/events', { method: 'POST', body });
@@ -150,14 +158,18 @@ class ApiClient {
   async getSpeakers() {
     return this.request('/speakers');
   }
+  
   async createSpeaker(speakerData) {
+    // Check if it's FormData (for images) or JSON
     const body = speakerData instanceof FormData ? speakerData : JSON.stringify(speakerData);
     return this.request('/speakers', { method: 'POST', body });
   }
+  
   async updateSpeaker(id, speakerData) {
     const body = speakerData instanceof FormData ? speakerData : JSON.stringify(speakerData);
     return this.request(`/speakers/${id}`, { method: 'PUT', body });
   }
+  
   async deleteSpeaker(id) {
     return this.request(`/speakers/${id}`, { method: 'DELETE' });
   }
@@ -203,7 +215,7 @@ class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
-  // 🖼️ MEMORIES / GALLERY
+  // 🖼️ MEMORIES / GALLERY (Uses Cloudinary)
   // ---------------------------------------------------------------------------
   
   async getEventMemories(eventId) {
@@ -211,6 +223,7 @@ class ApiClient {
   }
 
   async uploadEventMemories(eventId, formData) {
+    // formData MUST be an instance of FormData containing 'images' field
     return this.request(`/events/${eventId}/memories`, {
       method: 'POST',
       body: formData
