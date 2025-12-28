@@ -148,7 +148,7 @@ const Events = () => {
               // Discover Events
             </span>
             <h1 className="text-4xl md:text-6xl font-bold mt-4 mb-6">
-              {getPageTitle()} <span className="text-primary">Events</span>
+              {getPageTitle()} <span className="text-primary">Code Builders Events</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Find the perfect event to level up your skills and connect with 

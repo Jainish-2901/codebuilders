@@ -39,7 +39,8 @@ app.use(helmet({
 // '*' ke sath credentials: true kaam nahi karta. Specific domains batane padte hain.
 app.use(cors({
   origin: [
-    "http://localhost:5173",                   // Localhost Frontend
+    "http://localhost:5173",
+    "http://localhost:5174",                   // Localhost Frontend
     "https://codebuilders-events.vercel.app",  // Live Frontend (Update karein agar URL alag hai)
     // Agar koi aur domain hai to yaha add karein
   ],

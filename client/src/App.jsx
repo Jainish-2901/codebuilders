@@ -18,17 +18,9 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import AdminOverview from "./pages/admin/AdminOverview";
-import AdminEvents from "./pages/admin/AdminEvents";
-import AdminExternalEvents from "./pages/admin/AdminExternalEvents";
-import AdminSpeakers from "./pages/admin/AdminSpeakers";
-import AdminRegistrations from "./pages/admin/AdminRegistrations";
-import AdminVolunteers from "./pages/admin/AdminVolunteers";
-import AdminUsers from './pages/admin/AdminUsers';
 import VolunteerPanel from "./pages/volunteer/VolunteerPanel";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import AdminMessages from "./pages/admin/AdminMessages";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import TicketView from "./pages/TicketView";
@@ -66,16 +58,6 @@ const App = () => (
             {/* SHARED PROFILE ROUTE */}
             <Route path="/profile" element={<Profile />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-
-            {/* Admin routes */}
-            <Route path="/admin" element={<AdminOverview />} />
-            <Route path="/admin/events" element={<AdminEvents />} />
-            <Route path="/admin/external-events" element={<AdminExternalEvents />} />
-            <Route path="/admin/speakers" element={<AdminSpeakers />} />
-            <Route path="/admin/registrations" element={<AdminRegistrations />} />
-            <Route path="/admin/volunteers" element={<AdminVolunteers />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/messages" element={<AdminMessages />} />
             
             {/* Volunteer routes */}
             <Route path="/volunteer" element={<VolunteerPanel />} />
