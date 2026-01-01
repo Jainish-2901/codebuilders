@@ -157,7 +157,8 @@ const EventSidebar = ({
                   type="tel" 
                   value={formData.phone} 
                   onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))} 
-                  placeholder="+91 9876543210"
+                  placeholder="NA"
+                  required
                 />
               </div>
               <div className="flex gap-2">

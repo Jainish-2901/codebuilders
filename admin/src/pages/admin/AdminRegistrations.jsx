@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-// ✅ Added AlertDialog Imports
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +33,7 @@ import { format } from 'date-fns';
 
 export default function AdminRegistrations() {
   const [selectedEvent, setSelectedEvent] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all'); // 👈 New Status State
   const [searchTerm, setSearchTerm] = useState('');
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -44,9 +44,9 @@ export default function AdminRegistrations() {
     queryFn: () => apiClient.getEvents(),
   });
 
-  // 2. Fetch ALL Registrations (limit='all')
+  // 2. Fetch ALL Registrations
   const { data: apiResponse, isLoading, isRefetching, refetch } = useQuery({
-    queryKey: ['admin-registrations', selectedEvent],
+    queryKey: ['admin-registrations', selectedEvent], // We filter status client-side mostly, but could be API too
     queryFn: () => {
         const eventIdParam = selectedEvent === 'all' ? null : selectedEvent;
         return apiClient.getAllRegistrations(1, '', 'all', eventIdParam);
@@ -56,20 +56,30 @@ export default function AdminRegistrations() {
 
   const registrations = apiResponse?.registrations || [];
 
-  // 3. Search Filter (Client-side)
-  const filteredRegistrations = registrations.filter(reg => 
-    !searchTerm || 
-    reg.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reg.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reg.tokenId?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // 3. 🔍 Enhanced Filter Logic (Search + Status)
+  const filteredRegistrations = registrations.filter(reg => {
+    // Search Filter
+    const matchesSearch = !searchTerm || 
+      reg.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reg.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reg.tokenId?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Status Filter
+    let matchesStatus = true;
+    if (selectedStatus === 'attended') {
+        matchesStatus = reg.isAttended === true;
+    } else if (selectedStatus === 'registered') {
+        matchesStatus = reg.isAttended === false; // or undefined/null if treating as registered
+    }
+
+    return matchesSearch && matchesStatus;
+  });
 
   // Mutation: Delete Registration
   const deleteMutation = useMutation({
     mutationFn: (id) => apiClient.deleteRegistration(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-registrations'] });
-      // ✅ Updated Toast
       toast({ title: 'Registration deleted successfully', description: 'The registration record has been removed.' });
     },
     onError: (error) => {
@@ -112,10 +122,10 @@ export default function AdminRegistrations() {
     toast({ title: "Export successfully downloaded" });
   };
 
-  // Stats
+  // Stats (Based on current filtered view or global? Usually global for the dashboard cards)
   const stats = {
-    total: filteredRegistrations.length,
-    attended: filteredRegistrations.filter((r) => r.isAttended).length,
+    total: registrations.length,
+    attended: registrations.filter((r) => r.isAttended).length,
   };
 
   return (
@@ -132,7 +142,7 @@ export default function AdminRegistrations() {
               variant="outline" 
               size="sm" 
               onClick={downloadCSV} 
-              disabled={isLoading || stats.total === 0}
+              disabled={isLoading || filteredRegistrations.length === 0}
             >
               <Download className="w-4 h-4 mr-2" />
               Export CSV
@@ -177,6 +187,7 @@ export default function AdminRegistrations() {
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search Box */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -186,6 +197,8 @@ export default function AdminRegistrations() {
               className="pl-10"
             />
           </div>
+
+          {/* Event Filter */}
           <Select value={selectedEvent} onValueChange={setSelectedEvent}>
             <SelectTrigger className="w-full sm:w-[250px]">
               <SelectValue placeholder="Filter by event" />
@@ -195,6 +208,18 @@ export default function AdminRegistrations() {
               {events?.map((event) => (
                 <SelectItem key={event._id} value={event._id}>{event.title}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          {/* ✅ New Status Filter */}
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="registered">Registered</SelectItem>
+              <SelectItem value="attended">Checked In</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -258,7 +283,6 @@ export default function AdminRegistrations() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           
-                          {/* ✅ Delete Confirmation Dialog */}
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
@@ -297,7 +321,7 @@ export default function AdminRegistrations() {
                   {filteredRegistrations.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
-                        {searchTerm ? "No results found matching your search." : "No registrations found."}
+                        {searchTerm || selectedStatus !== 'all' ? "No results found matching your filters." : "No registrations found."}
                       </TableCell>
                     </TableRow>
                   )}

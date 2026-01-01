@@ -42,17 +42,17 @@ export function FeaturedEvents() {
     });
 
   return (
-    <section className="py-24 relative">
+    <section className="py-12 md:py-24 relative">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 md:mb-16">
           <span className="text-blue-600 font-mono text-sm tracking-wider uppercase">
             // Upcoming Events
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-6">
+          <h2 className="text-3xl md:text-5xl font-bold mt-4 mb-4 md:mb-6">
             Don't Miss Out
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
             Register for our upcoming events and be part of the most exciting
             tech community gatherings.
           </p>
@@ -65,9 +65,9 @@ export function FeaturedEvents() {
           </div>
         )}
 
-        {/* ✅ Events Grid */}
+        {/* ✅ Events Grid (Responsive: 1 col on mobile, 2 on tablet, 3 on desktop) */}
         {!isLoading && upcomingEvents.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {upcomingEvents.map((event, index) => {
 
               const rawDate = event.dateTime || event.date;
@@ -184,10 +184,10 @@ export function FeaturedEvents() {
 
         {/* View All Button */}
         <div className="text-center">
-          <Link to="/events">
+          <Link to="/events" className="w-full sm:w-auto inline-block">
             <Button 
                 size="lg" 
-                className="bg-blue-600 hover:bg-blue-700 text-white dark:text-black shadow-lg shadow-blue-500/25 border-none"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white dark:text-black shadow-lg shadow-blue-500/25 border-none"
             >
               View All Events
               <ArrowRight className="w-5 h-5 ml-2" />
