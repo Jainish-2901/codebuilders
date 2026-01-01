@@ -135,9 +135,9 @@ export function HeroSection() {
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
-            <Link to="/speakers">
+            <Link to="/team-members">
               <Button variant="hero-outline" size="xl">
-                Meet Speakers
+                Meet Team Members
               </Button>
             </Link>
           </div>
