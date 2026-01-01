@@ -39,14 +39,14 @@ export default function Signup() {
 
   const form = useForm({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: '', email: '', phone: '', password: '', confirmPassword: '' }, // ✅ Default value
+    defaultValues: { name: '', email: '', phone: '', password: '', confirmPassword: '' }, 
   });
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
       // ✅ Pass phone to signUp function
-      // (Make sure to update AuthContext to accept this 4th parameter!)
+      // Make sure your AuthContext's signUp function passes this 4th argument to the API
       const result = await signUp(data.name, data.email, data.password, data.phone);
       
       if (result.error) {

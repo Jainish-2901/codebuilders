@@ -64,8 +64,8 @@ export default function AdminUsers() {
     // Search Filter (Name, Email, or Phone)
     const term = searchTerm.toLowerCase();
     const matchesSearch = 
-      user.name.toLowerCase().includes(term) ||
-      user.email.toLowerCase().includes(term) ||
+      user.name?.toLowerCase().includes(term) ||
+      user.email?.toLowerCase().includes(term) ||
       (user.phone && user.phone.includes(term));
 
     // Date Range Filter
@@ -92,7 +92,7 @@ export default function AdminUsers() {
     const rows = filteredUsers.map(user => [
       `"${user.name}"`,
       `"${user.email}"`,
-      `"${user.phone || ''}"`,
+      `"${user.phone || 'N/A'}"`, // ✅ Ensure phone is exported
       `"${user.createdAt ? format(new Date(user.createdAt), 'yyyy-MM-dd') : ''}"`,
       user.isLoggedIn ? "Online" : "Offline",
       user.isActive ? "Active" : "Inactive"
@@ -249,7 +249,7 @@ export default function AdminUsers() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead> {/* ✅ Phone Column */}
+                    <TableHead>Phone</TableHead> {/* ✅ Phone Column Header */}
                     <TableHead>Joined Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Account</TableHead>
@@ -262,14 +262,16 @@ export default function AdminUsers() {
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       
-                      {/* ✅ Phone Data */}
+                      {/* ✅ Phone Data Cell */}
                       <TableCell>
                         {user.phone ? (
-                          <div className="flex items-center gap-1.5">
-                             <Phone className="w-3 h-3 text-muted-foreground" />
-                             {user.phone}
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                             <Phone className="w-3 h-3" />
+                             <span className="text-sm">{user.phone}</span>
                           </div>
-                        ) : "-"}
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
                       </TableCell>
                       
                       <TableCell>
@@ -375,7 +377,7 @@ export default function AdminUsers() {
                   </div>
                 </div>
                 
-                {/* ✅ Phone Input */}
+                {/* ✅ Phone Input in Dialog */}
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input id="phone" name="phone" type="tel" defaultValue={editingUser?.phone} placeholder="+91 9876543210" />

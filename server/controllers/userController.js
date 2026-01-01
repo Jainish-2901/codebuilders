@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 // @route   GET /api/users
 const getUsers = async (req, res) => {
   try {
-    // Send all data except the password
+    // Send all data (including phone & lastLogin) except the password
     const users = await User.find({}).select("-password").sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
@@ -41,7 +41,10 @@ const createUser = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone, // ✅ Include Phone so Admin Table updates
         role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin // ✅ Include Last Login (will be null initially)
       });
     } else {
       res.status(400).json({ message: "Invalid user data" });
@@ -77,8 +80,10 @@ const updateUser = async (req, res) => {
         _id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        phone: updatedUser.phone, // ✅ Return updated phone
         role: updatedUser.role,
         isActive: updatedUser.isActive,
+        lastLogin: updatedUser.lastLogin, // ✅ Return existing lastLogin so it doesn't disappear from table
       });
     } else {
       res.status(404).json({ message: "User not found" });
