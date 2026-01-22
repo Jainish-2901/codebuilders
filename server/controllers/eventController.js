@@ -48,7 +48,7 @@ const createEvent = async (req, res) => {
         const users = await User.find({}, "email name");
 
         if (users.length > 0) {
-          const clientUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+          const clientUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
           const emailJobs = users.map(user => ({
             to: user.email,
             type: 'NEW_EVENT',

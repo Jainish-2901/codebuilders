@@ -74,7 +74,7 @@ const createExternalEvent = async (req, res) => {
                 title,
                 date,
                 venue,
-                link: `${clientUrl}/external-event/${_id}`
+                link: `${clientUrl}/external-events/${_id}`
               }
             },
             status: 'pending'

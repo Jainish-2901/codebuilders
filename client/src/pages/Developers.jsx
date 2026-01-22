@@ -18,8 +18,8 @@ const LinkedInURL = [
 ]
 
 const REPO = {
-  owner: "Abdus-8747",
-  name: "FlowIQ",
+  owner: "CodeBuilders-BCA",
+  name: "codebuilders",
 };
 
 const Developers = () => {
