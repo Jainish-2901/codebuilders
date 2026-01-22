@@ -46,6 +46,7 @@ const allowedOrigins = [
   "https://codebuilders-events.vercel.app",
   "https://codebuilders-admin.vercel.app",
   "https://www.codebuilders.co.in",
+  "https://admin.codebuilders.co.in",
 ];
 
 app.use(cors({
