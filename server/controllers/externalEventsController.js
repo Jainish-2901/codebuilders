@@ -63,7 +63,7 @@ const createExternalEvent = async (req, res) => {
         if (users.length > 0) {
           const { title, date, venue } = req.body;
           const _id = event._id;
-          const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+          const clientUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
           const emailJobs = users.map(user => ({
             to: user.email,
