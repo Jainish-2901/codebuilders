@@ -1,8 +1,8 @@
-const dotenv = require("dotenv").config();
-const startCronJobs = require("./utils/cronJobs");
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
+const cookieParser = require("cookie-parser");
 
 // 👇 1. Import Security Packages
 const rateLimit = require('express-rate-limit');
@@ -56,9 +56,9 @@ app.use(cors({
 
 // A. Strict Limiter for Authenticationx          
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 100,
-  standardHeaders: true, 
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many login attempts from this IP, please try again after 15 minutes' }
 });
@@ -70,8 +70,8 @@ app.use("/api/auth/forgot-password", authLimiter);
 // B. Global Rate Limiting (General API usage)
 // ⚠️ Maine limit badha di hai (1000) taaki testing ke dauran aap block na hon
 const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, 
-  max: 1000, // Increased for development/testing
+  windowMs: 10 * 60 * 1000,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many requests from this IP, please try again after 10 minutes' }
@@ -83,6 +83,8 @@ app.use("/api", limiter);
 
 // 4. Body Parser
 app.use(express.json({ limit: "10kb" }));
+// Parse Cookies
+app.use(cookieParser());
 
 // 5. Data Sanitization against NoSQL Query Injection
 app.use(mongoSanitize());
@@ -106,12 +108,11 @@ app.use("/api/users", userRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/external-events", externalEventsRoutes);
+app.use("/api/certificates", require("./routes/certificateRoutes"));
 
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
-
-startCronJobs();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

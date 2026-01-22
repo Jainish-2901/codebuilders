@@ -3,9 +3,11 @@ const Event = require("../models/Event");
 const Registration = require("../models/Registration");
 const ExternalEvent = require("../models/ExternalEvent");
 const sendEmail = require("./sendEmail");
+const processEmailQueue = require("./emailQueueProcessor");
+const processCertificateQueue = require("./certificateQueueProcessor");
 
 const startCronJobs = () => {
-  // Schedule task to run every day at 9:00 AM
+  // 1. Daily Event Reminder (Fixed Time: 9:00 AM)
   cron.schedule("0 9 * * *", async () => {
     console.log("⏰ Running Daily Event Reminder Job...");
 
@@ -86,9 +88,9 @@ const startCronJobs = () => {
               email: reg.user.email,
               subject: `Reminder: ${event.title} is Tomorrow!`,
               // Pass HTML to your mailer
-              html: htmlContent, 
+              html: htmlContent,
               // Keep plain text as fallback for old devices/spam filters
-              message: `Hi ${reg.user.name}, reminder for ${event.title} at ${event.venue} tomorrow at ${event.startTime}.` 
+              message: `Hi ${reg.user.name}, reminder for ${event.title} at ${event.venue} tomorrow at ${event.startTime}.`
             });
           } catch (err) {
             console.error(`Failed to email ${reg.user.email}`);
@@ -99,6 +101,30 @@ const startCronJobs = () => {
       console.error("Cron Job Error:", error);
     }
   });
+
+  // 2. Email Worker (Non-blocking / Recursive Timeout Pattern)
+  const runEmailWorker = async () => {
+    try {
+      await processEmailQueue();
+    } catch (error) {
+      console.error("Email Worker Error:", error);
+    } finally {
+      setTimeout(runEmailWorker, 10000); // 10s delay
+    }
+  };
+  runEmailWorker();
+
+  // 3. Certificate Worker (Non-blocking / Recursive Timeout Pattern)
+  const runCertWorker = async () => {
+    try {
+      await processCertificateQueue();
+    } catch (error) {
+      console.error("Certificate Worker Error:", error);
+    } finally {
+      setTimeout(runCertWorker, 15000); // 15s delay
+    }
+  };
+  runCertWorker();
 };
 
 module.exports = startCronJobs;

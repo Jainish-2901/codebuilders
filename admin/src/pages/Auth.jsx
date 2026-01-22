@@ -27,7 +27,7 @@ export default function Auth() {
     if (user) {
       if (isAdmin) navigate('/admin');
       else if (isVolunteer) navigate('/volunteer');
-      else navigate('/'); 
+      else navigate('/');
     }
   }, [user, isAdmin, isVolunteer, navigate]);
 
@@ -57,7 +57,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background bg-grid flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
-      
+
       <Card className="w-full max-w-md glass glow-box relative z-10">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -70,7 +70,7 @@ export default function Auth() {
             Sign in to access admin dashboard or volunteer panel
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -87,53 +87,53 @@ export default function Auth() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex justify-between items-center">
-                        <FormLabel>Password</FormLabel>
-                        {/* Forgot Password Link */}
-                        <Link 
-                          to="/forgot-password" 
-                          className="text-xs text-primary hover:underline font-medium"
-                        >
-                          Forgot Password?
-                        </Link>
+                      <FormLabel>Password</FormLabel>
+                      {/* Forgot Password Link */}
+                      <Link
+                        to="/forgot-password"
+                        className="text-xs text-primary hover:underline font-medium"
+                      >
+                        Forgot Password?
+                      </Link>
                     </div>
-                    <FormControl>
-                      <div className="relative">
+                    <div className="relative">
+                      <FormControl>
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
                           className="bg-input border-border pr-10"
                           {...field}
                         />
-                        {/* Toggle Password Visibility */}
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </FormControl>
+                      </FormControl>
+                      {/* Toggle Password Visibility */}
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <> <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Signing in... </>
-                ) : ( 'Sign In' )}
+                ) : ('Sign In')}
               </Button>
             </form>
           </Form>
-          
+
           <div className="mt-6 text-center">
             <Button variant="ghost" onClick={() => navigate('/')} className="text-muted-foreground hover:text-foreground">
               ← Back to home

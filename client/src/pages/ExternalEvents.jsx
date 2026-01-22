@@ -45,15 +45,15 @@ const ExternalEvents = () => {
     const today = startOfDay(new Date());
     const eventDay = startOfDay(new Date(date));
 
-    if (eventDay > today) return 1; 
-    if (eventDay.getTime() === today.getTime()) return 2; 
-    return 3; 
+    if (eventDay > today) return 1;
+    if (eventDay.getTime() === today.getTime()) return 2;
+    return 3;
   };
 
   const filteredEvents = events?.filter((event) => {
     const eventDate = new Date(event.date);
     const isDateValid = isValid(eventDate);
-    
+
     const isStrictlyPast = isDateValid && isPast(eventDate) && !isToday(eventDate);
 
     let computedStatus = event.status;
@@ -84,20 +84,20 @@ const ExternalEvents = () => {
 
     return matchesStatus && matchesSearch;
   }).sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      const categoryA = getEventCategory(dateA);
-      const categoryB = getEventCategory(dateB);
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    const categoryA = getEventCategory(dateA);
+    const categoryB = getEventCategory(dateB);
 
-      if (categoryA !== categoryB) {
-        return categoryA - categoryB;
-      }
+    if (categoryA !== categoryB) {
+      return categoryA - categoryB;
+    }
 
-      if (categoryA === 3) {
-         return dateB - dateA;
-      } else {
-         return dateA - dateB;
-      }
+    if (categoryA === 3) {
+      return dateB - dateA;
+    } else {
+      return dateA - dateB;
+    }
   });
 
   const getPageTitle = () => {
@@ -145,11 +145,10 @@ const ExternalEvents = () => {
                 <button
                   key={tab}
                   onClick={() => handleFilterChange(tab)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                    filter === tab
-                      ? "bg-blue-600 text-white"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${filter === tab
+                    ? "bg-blue-600 text-white"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
@@ -200,11 +199,10 @@ const ExternalEvents = () => {
                       />
                       <div className="absolute top-4 right-4 flex gap-2">
                         {/* Event Type Badge */}
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
-                          event.type === "hackathon"
-                            ? "bg-destructive text-destructive-foreground"
-                            : "bg-blue-600 text-white"
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${event.type === "hackathon"
+                          ? "bg-destructive text-destructive-foreground"
+                          : "bg-blue-600 text-white"
+                          }`}>
                           {event.type}
                         </span>
 
@@ -232,7 +230,7 @@ const ExternalEvents = () => {
                       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4 text-blue-600" />
-                          {isDateValid ? format(eventDateObj, "MMM d, yyyy") : "TBA"}
+                          {isDateValid ? format(eventDateObj, "MMM d, yyyy h:mm a") : "TBA"}
                         </div>
                         {event.venue && (
                           <div className="flex items-center gap-1">
@@ -249,7 +247,7 @@ const ExternalEvents = () => {
                       </div>
 
                       {/* ✅ FORCE BLUE BUTTON */}
-                      <div 
+                      <div
                         className={cn(
                           "h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                           "w-full",

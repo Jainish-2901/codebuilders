@@ -17,10 +17,15 @@ const eventSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    
+
     // Google Maps Link Field
     mapUrl: {
-      type: String, 
+      type: String,
+    },
+
+    resourceLinks: {
+      type: [String], // Array of asset/resource links
+      default: [],
     },
 
     dateTime: {
@@ -36,7 +41,7 @@ const eventSchema = mongoose.Schema(
       type: Number,
       default: 100,
     },
-    
+
     // --- Images ---
     imageUrl: {
       type: String, // Stores Full Cloudinary URL (Cover Photo)
@@ -45,9 +50,9 @@ const eventSchema = mongoose.Schema(
     // ✅ NEW: External Album Link (Google Photos / Drive / etc.)
     memoriesUrl: {
       type: String,
-      default: "", 
+      default: "",
     },
-    
+
     // --- Registration Logic ---
     isRegistrationEnabled: {
       type: Boolean,

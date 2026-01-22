@@ -6,7 +6,7 @@ import { Loader2, Calendar, Search, ExternalLink, Image as ImageIcon } from "luc
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom"; // Import Link
+import { Link } from "react-router-dom"; 
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -27,9 +27,11 @@ const Memories = () => {
       try {
         const res = await axios.get(`${apiUrl}/events`);
         
-        // Filter: ONLY PAST events AND must have a memoriesUrl
+        // ✅ UPDATED LOGIC: 
+        // Show ANY event that has a valid `memoriesUrl`.
+        // Removed the check for `e.status === 'past'`.
         const eventsWithMemories = res.data
-          .filter((e) => e.status === 'past' && e.memoriesUrl && e.memoriesUrl.trim() !== "")
+          .filter((e) => e.memoriesUrl && e.memoriesUrl.trim() !== "")
           .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
         setEvents(eventsWithMemories);
@@ -91,7 +93,7 @@ const Memories = () => {
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Relive the connections, the learning, and the community spirit.
-              Browse photo albums from our past events.
+              Browse photo albums from our events.
             </p>
           </div>
 
@@ -148,30 +150,30 @@ const Memories = () => {
                   
                   {/* Cover Image of Event */}
                   <div className="h-56 overflow-hidden relative bg-secondary">
-                     <img 
-                       src={getImageUrl(event.imageUrl || event.image_url)} 
-                       alt={event.title} 
-                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                     />
-                     
-                     {/* Overlay */}
-                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                       <a 
-                         href={event.memoriesUrl} 
-                         target="_blank" 
-                         rel="noopener noreferrer"
-                         className="bg-white/10 backdrop-blur-md border border-white/50 text-white font-bold px-6 py-2 rounded-full flex items-center gap-2 hover:bg-white/20 transition-colors"
-                       >
-                         Open Album <ExternalLink className="w-4 h-4" />
-                       </a>
-                     </div>
+                      <img 
+                        src={getImageUrl(event.imageUrl || event.image_url)} 
+                        alt={event.title} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                      />
+                      
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <a 
+                          href={event.memoriesUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="bg-white/10 backdrop-blur-md border border-white/50 text-white font-bold px-6 py-2 rounded-full flex items-center gap-2 hover:bg-white/20 transition-colors"
+                        >
+                          Open Album <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
                   </div>
 
                   {/* Content */}
                   <div className="p-6 flex flex-col flex-grow">
                     <div className="flex items-center gap-2 text-xs font-mono text-primary mb-2">
-                       <Calendar className="w-3 h-3" />
-                       {format(new Date(event.dateTime), "MMMM d, yyyy")}
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(event.dateTime), "MMMM d, yyyy")}
                     </div>
                     
                     <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors line-clamp-1">
@@ -190,9 +192,9 @@ const Memories = () => {
                       </Button>
                       
                       <Button asChild variant="outline" size="icon">
-                         <Link to={`/events/${event._id}`} title="View Event Details">
+                          <Link to={`/events/${event._id}`} title="View Event Details">
                             <ExternalLink className="w-4 h-4" />
-                         </Link>
+                          </Link>
                       </Button>
                     </div>
                   </div>

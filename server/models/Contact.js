@@ -6,7 +6,15 @@ const contactSchema = mongoose.Schema(
     email: { type: String, required: true },
     subject: { type: String, required: true },
     message: { type: String, required: true },
-    status: { type: String, enum: ["new", "read", "replied"], default: "new" },
+    isRead: { 
+      type: Boolean, 
+      default: false 
+    },
+    status: { 
+      type: String, 
+      enum: ["new", "read", "replied"], 
+      default: "new" 
+    },
   },
   { timestamps: true }
 );

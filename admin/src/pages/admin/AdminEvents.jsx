@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
@@ -31,14 +31,14 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Ticket, Image as ImageIcon, MapPin } from 'lucide-react';
-import { format, isPast } from 'date-fns'; 
+import { Plus, Pencil, Trash2, Loader2, Ticket, Image as ImageIcon, MapPin, Send } from 'lucide-react';
+import { format, isPast } from 'date-fns';
 
 export default function AdminEvents() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const fileInputRef = useRef(null);
-  
+
   const [regEnabled, setRegEnabled] = useState(true);
 
   const queryClient = useQueryClient();
@@ -83,30 +83,38 @@ export default function AdminEvents() {
     onError: (error) => toast({ variant: 'destructive', title: 'Error', description: error.message }),
   });
 
+  const sendCertificatesMutation = useMutation({
+    mutationFn: async (eventId) => await apiClient.sendCertificates(eventId),
+    onSuccess: (data) => {
+      toast({ title: 'Certificates Sending Queued', description: data.message });
+    },
+    onError: (error) => toast({ variant: 'destructive', title: 'Error', description: error.message }),
+  });
+
   const getEventDateParts = (isoString) => {
     if (!isoString) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        return { 
-            date: format(tomorrow, 'yyyy-MM-dd'), 
-            hour: '9', 
-            minute: '00', 
-            ampm: 'AM' 
-        };
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return {
+        date: format(tomorrow, 'yyyy-MM-dd'),
+        hour: '9',
+        minute: '00',
+        ampm: 'AM'
+      };
     }
-    
+
     const d = new Date(isoString);
     let h = d.getHours();
     const m = d.getMinutes();
     const ampm = h >= 12 ? 'PM' : 'AM';
-    
+
     h = h % 12;
     h = h ? h : 12;
 
     return {
       date: format(d, 'yyyy-MM-dd'),
       hour: h.toString(),
-      minute: m.toString().padStart(2, '0'), 
+      minute: m.toString().padStart(2, '0'),
       ampm
     };
   };
@@ -128,18 +136,18 @@ export default function AdminEvents() {
     if (ampmPart === 'AM' && hour24 === 12) hour24 = 0;
 
     const finalIsoString = new Date(`${datePart}T${hour24.toString().padStart(2, '0')}:${minutePart}:00`).toISOString();
-    
+
     formData.set('dateTime', finalIsoString);
     formData.delete('datePart');
     formData.delete('timeHour');
     formData.delete('timeMinute');
     formData.delete('timeAmPm');
 
-    formData.set('isRegistrationEnabled', String(regEnabled)); 
-    
+    formData.set('isRegistrationEnabled', String(regEnabled));
+
     const status = new Date(finalIsoString) < new Date() ? 'past' : 'upcoming';
     formData.set('status', status);
-    
+
     if (editingEvent) {
       updateMutation.mutate({ id: editingEvent._id, formData });
     } else {
@@ -184,7 +192,7 @@ export default function AdminEvents() {
                   Configure event details and settings.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6 mt-4" encType="multipart/form-data">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium border-b pb-2">Basic Details</h3>
@@ -204,11 +212,11 @@ export default function AdminEvents() {
                       <MapPin className="w-3 h-3 text-muted-foreground" />
                       Google Maps Link
                     </Label>
-                    <Input 
-                      id="mapUrl" 
-                      name="mapUrl" 
-                      defaultValue={editingEvent?.mapUrl} 
-                      placeholder="Paste Google Maps Share Link here..." 
+                    <Input
+                      id="mapUrl"
+                      name="mapUrl"
+                      defaultValue={editingEvent?.mapUrl}
+                      placeholder="Paste Google Maps Share Link here..."
                     />
                   </div>
 
@@ -232,67 +240,67 @@ export default function AdminEvents() {
                         required
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Time</Label>
                       <div className="flex gap-2">
                         <div className="flex-1">
-                            <select 
-                                name="timeHour" 
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                defaultValue={defaultParts.hour}
-                            >
-                                {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
-                                    <option key={h} value={h}>{h}</option>
-                                ))}
-                            </select>
+                          <select
+                            name="timeHour"
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            defaultValue={defaultParts.hour}
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                              <option key={h} value={h}>{h}</option>
+                            ))}
+                          </select>
                         </div>
-                        
+
                         <span className="self-center font-bold">:</span>
-                        
+
                         <div className="flex-1">
-                             <select 
-                                name="timeMinute" 
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                defaultValue={defaultParts.minute}
-                            >
-                                {Array.from({ length: 60 }, (_, i) => i).map((m) => {
-                                    const minStr = m.toString().padStart(2, '0');
-                                    return <option key={minStr} value={minStr}>{minStr}</option>;
-                                })}
-                            </select>
+                          <select
+                            name="timeMinute"
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            defaultValue={defaultParts.minute}
+                          >
+                            {Array.from({ length: 60 }, (_, i) => i).map((m) => {
+                              const minStr = m.toString().padStart(2, '0');
+                              return <option key={minStr} value={minStr}>{minStr}</option>;
+                            })}
+                          </select>
                         </div>
 
                         <div className="flex-1">
-                            <select 
-                                name="timeAmPm" 
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                defaultValue={defaultParts.ampm}
-                            >
-                                <option value="AM">AM</option>
-                                <option value="PM">PM</option>
-                            </select>
+                          <select
+                            name="timeAmPm"
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            defaultValue={defaultParts.ampm}
+                          >
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                          </select>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                      <Label htmlFor="maxAttendees">Max Attendees</Label>
-                      <Input id="maxAttendees" name="maxAttendees" type="number" defaultValue={editingEvent?.maxAttendees ?? 500} />
+                    <Label htmlFor="maxAttendees">Max Attendees</Label>
+                    <Input id="maxAttendees" name="maxAttendees" type="number" defaultValue={editingEvent?.maxAttendees ?? 500} />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                     <div className="space-y-2">
                       <Label htmlFor="image">Event Cover Image</Label>
                       <Input id="image" name="image" type="file" accept="image/*" ref={fileInputRef} />
-                      
+
                       {editingEvent?.imageUrl && (
                         <div className="mt-2 w-full h-32 rounded-md overflow-hidden border border-border relative group">
-                          <img 
-                            src={editingEvent.imageUrl} 
-                            alt="Current Event" 
-                            className="w-full h-full object-cover" 
+                          <img
+                            src={editingEvent.imageUrl}
+                            alt="Current Event"
+                            className="w-full h-full object-cover"
                           />
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
                             Current Cover
@@ -303,12 +311,12 @@ export default function AdminEvents() {
 
                     <div className="space-y-2">
                       <Label htmlFor="memoriesUrl">Memories Album Link</Label>
-                      <Input 
-                        id="memoriesUrl" 
-                        name="memoriesUrl" 
-                        type="url" 
-                        placeholder="https://photos.google.com/share/..." 
-                        defaultValue={editingEvent?.memoriesUrl ?? ''} 
+                      <Input
+                        id="memoriesUrl"
+                        name="memoriesUrl"
+                        type="url"
+                        placeholder="https://photos.google.com/share/..."
+                        defaultValue={editingEvent?.memoriesUrl ?? ''}
                       />
                       <p className="text-[0.8rem] text-muted-foreground">
                         Paste the link to your external photo album (Google Drive/Photos).
@@ -359,7 +367,7 @@ export default function AdminEvents() {
                 <TableBody>
                   {events?.map((event) => {
                     const isEventPast = isPast(new Date(event.dateTime));
-                    
+
                     return (
                       <TableRow key={event._id}>
                         <TableCell className="font-medium flex items-center gap-2">
@@ -372,13 +380,13 @@ export default function AdminEvents() {
                           )}
                           {event.title}
                         </TableCell>
-                        
+
                         <TableCell>
-                            {event.dateTime 
-                                ? format(new Date(event.dateTime), 'MMM d, yyyy h:mm a') 
-                                : 'TBA'}
+                          {event.dateTime
+                            ? format(new Date(event.dateTime), 'MMM d, yyyy h:mm a')
+                            : 'TBA'}
                         </TableCell>
-                        
+
                         <TableCell>
                           <Badge variant={isEventPast ? 'secondary' : 'default'} className={isEventPast ? 'text-muted-foreground' : ''}>
                             {isEventPast ? 'Ended' : 'Upcoming'}
@@ -386,22 +394,50 @@ export default function AdminEvents() {
                         </TableCell>
 
                         <TableCell>
-                            {event.isRegistrationEnabled ? (
-                              <Badge variant="outline" className="border-blue-500 text-blue-500 gap-1">
-                                <Ticket className="w-3 h-3" /> Open
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-muted-foreground gap-1">
-                                Closed
-                              </Badge>
-                            )}
+                          {event.isRegistrationEnabled ? (
+                            <Badge variant="outline" className="border-blue-500 text-blue-500 gap-1">
+                              <Ticket className="w-3 h-3" /> Open
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground gap-1">
+                              Closed
+                            </Badge>
+                          )}
                         </TableCell>
-                        
+
                         <TableCell className="text-right flex items-center justify-end gap-2">
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(event)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          
+
+                          {/* ✅ Send Certificates Button */}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-800" title="Send Certificates">
+                                <Send className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Send Certificates?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will generate and email participation certificates to all registered attendees who are marked as <strong>Attended</strong> for <strong>{event.title}</strong>.
+                                  <br /><br />
+                                  Are you sure you want to proceed?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => sendCertificatesMutation.mutate(event._id)}
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                  Send Certificates
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+
                           {/* ✅ AlertDialog Added Here */}
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -420,7 +456,7 @@ export default function AdminEvents() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
+                                <AlertDialogAction
                                   onClick={() => deleteMutation.mutate(event._id)}
                                   className="bg-destructive hover:bg-destructive/90"
                                 >

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate, useLocation } from "react-router-dom"; 
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext"; // ✅ IMPORT AUTH CONTEXT
@@ -16,23 +16,25 @@ import AddToCalendar from "@/components/events/AddToCalendar";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 // --- Sidebar Component ---
-const EventSidebar = ({ 
-  event, 
-  user, 
-  formData, 
-  setFormData, 
-  isRegistering, 
-  setIsRegistering, 
-  isSubmitting, 
-  handleRegister, 
-  handleShare, 
-  isDateValid, 
-  eventDateObj, 
-  isEventOver 
+const EventSidebar = ({
+  event,
+  user,
+  formData,
+  setFormData,
+  isRegistering,
+  setIsRegistering,
+  isSubmitting,
+  handleRegister,
+  handleShare,
+  isDateValid,
+  eventDateObj,
+  isEventOver,
+  isUserRegisteredForEvent,
+  registeredTokenId
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast(); 
+  const { toast } = useToast();
 
   const handleRegistrationClick = () => {
     // LOGIC 1: Check Global Auth State
@@ -40,7 +42,7 @@ const EventSidebar = ({
       toast({
         title: "Login Required",
         description: "Please log in to register for this event.",
-        variant: "default", 
+        variant: "default",
       });
       navigate("/login", { state: { from: location.pathname } });
       return;
@@ -74,10 +76,10 @@ const EventSidebar = ({
             <div>
               <p className="font-bold text-lg text-foreground break-words">{event.venue}</p>
               {event.mapUrl ? (
-                <a 
-                  href={event.mapUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={event.mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-muted-foreground text-sm hover:text-primary hover:underline transition-colors flex items-center gap-1"
                 >
                   View Map <ExternalLink className="w-3 h-3" />
@@ -102,61 +104,77 @@ const EventSidebar = ({
             {/* CTA BUTTON */}
             {!isRegistering && (
               <div className="space-y-3">
-                <Button
-                  className={`
-                    w-full h-12 text-lg font-bold transition-all
-                    ${!event.isRegistrationEnabled
-                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+
+                {isUserRegisteredForEvent ? (
+                  <Link to={`/ticket/${registeredTokenId}`} className="w-full">
+                    <Button className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+                      View Ticket
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    className={`
+          w-full h-12 text-lg font-bold transition-all
+          ${!event.isRegistrationEnabled
+                        ? "bg-muted text-muted-foreground cursor-not-allowed"
+                        : !user
+                          ? "bg-secondary hover:bg-secondary/80 text-foreground"
+                          : "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:scale-[1.02]"
+                      }
+        `}
+                    onClick={handleRegistrationClick}
+                    disabled={!event.isRegistrationEnabled}
+                  >
+                    {!event.isRegistrationEnabled
+                      ? "Registration Closed"
                       : !user
-                        ? "bg-secondary hover:bg-secondary/80 text-foreground" 
-                        : "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:scale-[1.02]"
-                    }
-                  `}
-                  onClick={handleRegistrationClick} 
-                  disabled={!event.isRegistrationEnabled}
-                >
-                  {!event.isRegistrationEnabled
-                    ? "Registration Closed"
-                    : !user
-                      ? "Login to Register" 
-                      : "Register Now"}
-                </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  {event.maxAttendees ? `${event.maxAttendees} spots available` : "Limited capacity"}
-                </p>
+                        ? "Login to Register"
+                        : "Register Now"}
+                  </Button>
+                )}
+
+                {!isUserRegisteredForEvent && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    {event.maxAttendees
+                      ? `${event.maxAttendees - (event.registrationCount || 0)} spots available`
+                      : "Limited capacity"}
+                  </p>
+                )}
+
               </div>
             )}
+
 
             {/* REGISTRATION FORM */}
             <form onSubmit={handleRegister} className={`space-y-4 ${!isRegistering ? "hidden" : "block"}`}>
               <h4 className="text-lg font-semibold text-center">Complete Your Registration</h4>
               <div>
                 <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  type="text" 
-                  value={formData.name} 
-                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))} 
-                  required 
+                <Input
+                  id="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                  required
                 />
               </div>
               <div>
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={formData.email} 
-                  onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))} 
-                  required 
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                  required
                 />
               </div>
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input 
-                  id="phone" 
-                  type="tel" 
-                  value={formData.phone} 
-                  onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))} 
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                   placeholder="+91 9876543210"
                 />
               </div>
@@ -196,10 +214,12 @@ const EventSidebar = ({
 const EventDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
-  
-  const { user } = useAuth(); 
-  
+
+  const { user } = useAuth();
+
   const [event, setEvent] = useState(null);
+  const [isUserRegisteredForEvent, setIsUserRegisteredForEvent] = useState(false);
+  const [registeredTokenId, setRegisteredTokenId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -219,15 +239,38 @@ const EventDetail = () => {
   }, [user]);
 
   useEffect(() => {
+    const checkRegistration = async () => {
+      try {
+        const res = await axios.get(
+          `${apiUrl}/registrations/is-registered/${id}`,
+          { withCredentials: true }
+        );
+
+        setIsUserRegisteredForEvent(res.data.isRegistered);
+        if (res.data.tokenId) {
+          setRegisteredTokenId(res.data.tokenId);
+        }
+      } catch (err) {
+        console.error("Check registration failed", err);
+        setIsUserRegisteredForEvent(false);
+      }
+    };
+
+    if (user && id) {
+      checkRegistration();
+    }
+  }, [user, id]);
+
+  useEffect(() => {
     const fetchEvent = async () => {
       setIsLoading(true);
       try {
         const res = await axios.get(`${apiUrl}/events/${id}`);
         setEvent(res.data);
-      } catch (error) { 
-        console.error("Event not found", error); 
-      } finally { 
-        setIsLoading(false); 
+      } catch (error) {
+        console.error("Event not found", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -238,15 +281,16 @@ const EventDetail = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post(`${apiUrl}/registrations`, { 
-        eventId: event._id, 
-        userName: formData.name, 
-        userEmail: formData.email, 
-        userPhone: formData.phone 
-      });
-      
+      await axios.post(`${apiUrl}/registrations`, {
+        eventId: event._id,
+        userName: formData.name,
+        userEmail: formData.email,
+        userPhone: formData.phone
+      }, { withCredentials: true });
+
       toast({ title: "Registration Successful!", description: "Check your email for the ticket." });
       setIsRegistering(false);
+      setIsUserRegisteredForEvent(true);
       // Optional: Don't clear form immediately to improve UX
       // setFormData({ name: "", email: "", phone: "" }); 
 
@@ -272,25 +316,25 @@ const EventDetail = () => {
     if (!event) return;
     const eventDate = new Date(event.dateTime).toDateString();
     const eventTime = new Date(event.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const shortDesc = event.description 
-      ? (event.description.length > 100 ? event.description.substring(0, 97) + "..." : event.description) 
+
+    const shortDesc = event.description
+      ? (event.description.length > 100 ? event.description.substring(0, 97) + "..." : event.description)
       : "Join us to learn and grow!";
 
     const shareTitle = `🚀 Event Alert: ${event.title}`;
     const shareText = `🚀 *Event Alert: ${event.title}*\n\nReady to level up? Join us for an exclusive session at CodeBuilders!\n\n📅 *Date:* ${eventDate} at ${eventTime}\n📍 *Venue:* ${event.venue}\n💡 *Topic:* ${shortDesc}\n\n👇 *Register & Details:*`;
-    
+
     const shareUrl = window.location.href;
 
     if (navigator.share) {
       try {
-        await navigator.share({ 
-            title: shareTitle, 
-            text: shareText, 
-            url: shareUrl 
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl
         });
-      } catch (err) { 
-        console.log("Share canceled", err); 
+      } catch (err) {
+        console.log("Share canceled", err);
       }
     } else {
       navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
@@ -366,11 +410,13 @@ const EventDetail = () => {
 
               {/* Mobile Sidebar */}
               <div className="block lg:hidden mt-8 mb-8">
-                <EventSidebar 
+                <EventSidebar
                   event={event} user={user} formData={formData} setFormData={setFormData}
                   isRegistering={isRegistering} setIsRegistering={setIsRegistering} isSubmitting={isSubmitting}
                   handleRegister={handleRegister} handleShare={handleShare} isDateValid={isDateValid}
                   eventDateObj={eventDateObj} isEventOver={isEventOver}
+                  isUserRegisteredForEvent={isUserRegisteredForEvent}
+                  registeredTokenId={registeredTokenId}
                 />
               </div>
 
@@ -416,11 +462,13 @@ const EventDetail = () => {
             {/* Desktop Sidebar */}
             <div className="hidden lg:block lg:col-span-4 space-y-8">
               <div className="sticky top-24">
-                <EventSidebar 
+                <EventSidebar
                   event={event} user={user} formData={formData} setFormData={setFormData}
                   isRegistering={isRegistering} setIsRegistering={setIsRegistering} isSubmitting={isSubmitting}
                   handleRegister={handleRegister} handleShare={handleShare} isDateValid={isDateValid}
                   eventDateObj={eventDateObj} isEventOver={isEventOver}
+                  isUserRegisteredForEvent={isUserRegisteredForEvent}
+                  registeredTokenId={registeredTokenId}
                 />
               </div>
             </div>

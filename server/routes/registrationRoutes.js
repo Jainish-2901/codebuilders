@@ -8,18 +8,19 @@ const {
   checkInRegistration,
   updateAttendance,
   deleteRegistration,
-  getEventRegistrations, // 👈 ✅ IMPORT THIS (Crucial for Volunteers)
+  getEventRegistrations,
+  isUserRegisteredForEvent,
 } = require("../controllers/registrationController");
 
 // Auth Middleware
-const { protect, admin } = require("../middleware/authMiddleware");
+const { protect, optionalProtect, admin } = require("../middleware/authMiddleware");
 
 // ==================================================================
 // ✅ PUBLIC ROUTES (No Login Required)
 // ==================================================================
 
-// 1. Create Registration (Guest User Allowed)
-router.post("/", registerForEvent);
+// 1. Create Registration (Guest User Allowed but tracks UserID if logged in)
+router.post("/", optionalProtect, registerForEvent);
 
 // 2. View Ticket (Guest User Allowed)
 router.get("/ticket/:tokenId", getTicketByToken);
@@ -53,6 +54,9 @@ router.delete("/:id", protect, admin, deleteRegistration);
 router.put("/checkin/:tokenId", protect, checkInRegistration);
 
 // Toggle Attendance
-router.put("/:id/attendance", protect, updateAttendance); 
+router.put("/:id/attendance", protect, updateAttendance);
+
+// Check if User is Registered for Event
+router.get("/is-registered/:eventId", protect, isUserRegisteredForEvent);
 
 module.exports = router;

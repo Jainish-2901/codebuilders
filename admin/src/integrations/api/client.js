@@ -8,13 +8,9 @@ class ApiClient {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
 
-    // ✅ FIX: Check BOTH LocalStorage AND SessionStorage for the token
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-
     // Default headers
     const headers = {
       ...options.headers,
-      ...(token && { Authorization: `Bearer ${token}` }),
     };
 
     // ⚠️ CRITICAL: Only set JSON Content-Type if NOT sending FormData.
@@ -25,6 +21,7 @@ class ApiClient {
     const config = {
       ...options,
       headers,
+      credentials: 'include', // ✅ Essential for sending HttpOnly cookies
     };
 
     try {
@@ -33,18 +30,15 @@ class ApiClient {
       // Handle 401 (Unauthorized) specifically
       if (response.status === 401) {
         console.warn('[API] 401 Unauthorized - Session expired or invalid.');
-        
-        // ✅ FIX: Clear BOTH storages on 401
-        if (token) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            sessionStorage.removeItem('token'); // Clear session too
-            sessionStorage.removeItem('user');
-            
-            if (!window.location.pathname.includes('/auth')) {
-                window.location.href = '/auth';
-            }
+
+        // Clear user session data (but keep theme/settings)
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
+
+        if (!window.location.pathname.includes('/auth')) {
+          window.location.href = '/auth';
         }
+
         throw new Error('Session expired. Please login again.');
       }
 
@@ -53,11 +47,11 @@ class ApiClient {
       }
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'API request failed');
       }
-      
+
       return data;
 
     } catch (error) {
@@ -69,26 +63,29 @@ class ApiClient {
   // ---------------------------------------------------------------------------
   // 🔐 AUTHENTICATION & PROFILE
   // ---------------------------------------------------------------------------
-  
+
   async login(email, password) {
     return this.request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
   }
-  
+
   async register(email, password, name) {
     return this.request('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) });
   }
-  
-  async getCurrentUser() { 
-    return this.request('/auth/me'); 
+
+  async getCurrentUser() {
+    return this.request('/auth/me');
   }
-  
-  async logout() { 
-      // ✅ FIX: Clear BOTH storages on logout
-      localStorage.removeItem('token');
+
+  async logout() {
+    try {
+      await this.request('/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
       localStorage.removeItem('user');
-      sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
-      window.location.href = '/auth'; 
+      window.location.href = '/auth';
+    }
   }
 
   async updateProfile(data) {
@@ -100,16 +97,16 @@ class ApiClient {
   }
 
   async requestPasswordReset(email) {
-    return this.request('/auth/forgot-password', { 
-      method: 'POST', 
-      body: JSON.stringify({ email }) 
+    return this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
     });
   }
 
   async resetPassword(email, otp, newPassword) {
-    return this.request('/auth/reset-password', { 
-      method: 'POST', 
-      body: JSON.stringify({ email, otp, newPassword }) 
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, newPassword })
     });
   }
 
@@ -118,7 +115,7 @@ class ApiClient {
   // ---------------------------------------------------------------------------
 
   async getAllUsers() {
-    return this.request('/users'); 
+    return this.request('/users');
   }
 
   async createUser(userData) {
@@ -132,11 +129,11 @@ class ApiClient {
   async deleteUser(id) {
     return this.request(`/users/${id}`, { method: 'DELETE' });
   }
-  
+
   // ---------------------------------------------------------------------------
   // 📅 EVENTS MANAGEMENT
   // ---------------------------------------------------------------------------
-  
+
   async getEvents(filter) {
     const query = filter ? `?filter=${filter}` : '';
     return this.request(`/events${query}`);
@@ -163,39 +160,39 @@ class ApiClient {
   // ---------------------------------------------------------------------------
   // 👥 VOLUNTEERS & ADMIN
   // ---------------------------------------------------------------------------
-  
-  async getAdminOverview() { 
-    return this.request('/admin/overview'); 
-  }
-  
-  async getVolunteers() { 
-    return this.request('/volunteers'); 
-  }
-  
-  async getVolunteerMe() { 
-    return this.request('/volunteers/me'); 
-  } 
 
-  async createVolunteer(data) { 
-    return this.request('/volunteers', { method: 'POST', body: JSON.stringify(data) }); 
+  async getAdminOverview() {
+    return this.request('/admin/overview');
   }
 
-  async updateVolunteer(id, data) { 
-    return this.request(`/volunteers/${id}`, { method: 'PUT', body: JSON.stringify(data) }); 
+  async getVolunteers() {
+    return this.request('/volunteers');
   }
 
-  async deleteVolunteer(id) { 
-    return this.request(`/volunteers/${id}`, { method: 'DELETE' }); 
+  async getVolunteerMe() {
+    return this.request('/volunteers/me');
+  }
+
+  async createVolunteer(data) {
+    return this.request('/volunteers', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async updateVolunteer(id, data) {
+    return this.request(`/volunteers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  async deleteVolunteer(id) {
+    return this.request(`/volunteers/${id}`, { method: 'DELETE' });
   }
 
   // ---------------------------------------------------------------------------
   // 🎤 Team Member
   // ---------------------------------------------------------------------------
-  
+
   async getTeamMembers() {
     return this.request('/team-members');
   }
-  
+
   async createTeamMember(teamMemberData) {
     const body = teamMemberData instanceof FormData ? teamMemberData : JSON.stringify(teamMemberData);
     return this.request('/team-members', { method: 'POST', body });
@@ -213,22 +210,22 @@ class ApiClient {
   // ---------------------------------------------------------------------------
   // 🎟️ REGISTRATIONS
   // ---------------------------------------------------------------------------
-  
-  async getAllRegistrations(page = 1, search = '', limit = 10, eventId = null) { 
+
+  async getAllRegistrations(page = 1, search = '', limit = 10, eventId = null) {
     const params = new URLSearchParams();
-    
+
     params.append('page', page);
     params.append('limit', limit);
-    
+
     if (search) {
-        params.append('search', search);
-    }
-    
-    if (eventId && eventId !== 'all') {
-        params.append('eventId', eventId);
+      params.append('search', search);
     }
 
-    return this.request(`/registrations?${params.toString()}`); 
+    if (eventId && eventId !== 'all') {
+      params.append('eventId', eventId);
+    }
+
+    return this.request(`/registrations?${params.toString()}`);
   }
 
   async getRecentRegistrations() {
@@ -240,10 +237,10 @@ class ApiClient {
   }
 
   async toggleRegistrationAttendance(id, isAttended) {
-      return this.request(`/registrations/${id}/attendance`, { 
-        method: 'PUT', 
-        body: JSON.stringify({ isAttended }) 
-      });
+    return this.request(`/registrations/${id}/attendance`, {
+      method: 'PUT',
+      body: JSON.stringify({ isAttended })
+    });
   }
 
   async deleteRegistration(id) {
@@ -253,20 +250,20 @@ class ApiClient {
   async checkInRegistration(tokenId) {
     return this.request(`/registrations/checkin/${tokenId}`, { method: 'PUT' });
   }
-  
+
   // ---------------------------------------------------------------------------
   // 📩 MESSAGES (CONTACT)
   // ---------------------------------------------------------------------------
-  
+
   async sendContactMessage(data) {
     // Assuming this maps to POST /api/contact
     return this.request('/contact', { method: 'POST', body: JSON.stringify(data) });
   }
-  
+
   async getContactMessages() {
-    return this.request('/contact'); 
+    return this.request('/contact');
   }
-  
+
   async deleteContactMessage(id) {
     return this.request(`/contact/${id}`, { method: 'DELETE' });
   }
@@ -282,10 +279,10 @@ class ApiClient {
 
   async getExternalEvents(type = null, status = null) {
     const params = new URLSearchParams();
-    
+
     if (type) params.append('type', type);
     if (status) params.append('status', status);
-    
+
     const query = params.toString() ? `?${params.toString()}` : '';
     return this.request(`/external-events${query}`);
   }
@@ -306,6 +303,13 @@ class ApiClient {
 
   async deleteExternalEvent(id) {
     return this.request(`/external-events/${id}`, { method: 'DELETE' });
+  }
+  // ---------------------------------------------------------------------------
+  // 📜 CERTIFICATES
+  // ---------------------------------------------------------------------------
+
+  async sendCertificates(eventId) {
+    return this.request(`/certificates/send/${eventId}`, { method: 'POST' });
   }
 }
 

@@ -7,13 +7,15 @@ const {
   updateProfile,
   changePassword,
   requestPasswordReset, // 👈 Import
-  resetPasswordWithOtp  // 👈 Import
+  resetPasswordWithOtp,  // 👈 Import
+  logout
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 
 // Public Routes
 router.post("/register", registerUser);
 router.post("/login", authUser);
+router.post("/logout", logout);
 
 // 👇 Forgot Password Routes (Must be Public)
 router.post("/forgot-password", requestPasswordReset);

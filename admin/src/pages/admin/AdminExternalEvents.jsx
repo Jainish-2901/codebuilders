@@ -111,7 +111,7 @@ export default function AdminExternalEvents() {
       description: formData.get('description'),
       type: formData.get('type'),
       link: formData.get('link'),
-      date: formData.get('date'),
+      date: new Date(formData.get('date')).toISOString(),
       venue: formData.get('venue'),
       organizer: formData.get('organizer'),
       imageUrl: formData.get('imageUrl'),
@@ -346,7 +346,7 @@ export default function AdminExternalEvents() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
-                        {format(new Date(event.date), 'MMM dd, yyyy HH:mm')}
+                        {format(new Date(event.date), 'MMM dd, yyyy hh:mm a')}
                       </div>
                     </TableCell>
                     <TableCell>

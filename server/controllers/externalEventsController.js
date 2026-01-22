@@ -5,6 +5,13 @@ const ExternalEvent = require("../models/ExternalEvent");
 // @access  Public
 const getExternalEvents = async (req, res) => {
   try {
+    // Auto-update status based on time
+    const now = new Date();
+    await ExternalEvent.updateMany(
+      { date: { $lt: now }, status: 'upcoming' },
+      { $set: { status: 'past' } }
+    );
+
     const { type, status } = req.query;
     let filter = {};
 
@@ -44,6 +51,39 @@ const getExternalEvent = async (req, res) => {
 const createExternalEvent = async (req, res) => {
   try {
     const event = await ExternalEvent.create(req.body);
+
+    // 🚀 NEW: Queue "New Event" Email for ALL Users (if upcoming)
+    // Assuming status is determined by date for external events usually, or we just send it.
+    if (!req.body.status || req.body.status === 'upcoming') {
+      try {
+        const User = require("../models/User");
+        const EmailQueue = require("../models/EmailQueue");
+        const users = await User.find({}, "email name");
+
+        if (users.length > 0) {
+          const { title, date, venue } = req.body;
+          const _id = event._id;
+          const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+          const emailJobs = users.map(user => ({
+            to: user.email,
+            type: 'EXTERNAL_EVENT_ALERT',
+            data: {
+              userName: user.name,
+              event: {
+                title,
+                date,
+                venue,
+                link: `${clientUrl}/external-event/${_id}`
+              }
+            },
+            status: 'pending'
+          }));
+          await EmailQueue.insertMany(emailJobs);
+        }
+      } catch (queueError) { console.error("Queue Error", queueError); }
+    }
+
     res.status(201).json(event);
   } catch (error) {
     res.status(400).json({ message: error.message });

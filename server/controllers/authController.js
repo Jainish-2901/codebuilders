@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer"); 
+const nodemailer = require("nodemailer");
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -13,7 +13,11 @@ const generateToken = (id) => {
 // @desc    Register a new user
 // @route   POST /api/auth/register
 const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone } = req.body;
+
+  if (email !== email.toLowerCase() || !email.endsWith('.com')) {
+    return res.status(400).json({ message: "Email must be in proper format" });
+  }
 
   const userExists = await User.findOne({ email });
 
@@ -25,15 +29,35 @@ const registerUser = async (req, res) => {
     name,
     email,
     password,
+    phone,
   });
 
   if (user) {
+    // Generate Token
+    const token = generateToken(user._id);
+
+    // Set Cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Must be 'none' to enable cross-site delivery
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
+
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id),
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isAdmin: user.role === 'admin',
+        isVolunteer: user.role === 'volunteer',
+      }
     });
   } else {
     res.status(400).json({ message: "Invalid user data" });
@@ -48,18 +72,43 @@ const authUser = async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
+    // Generate Token
+    const token = generateToken(user._id);
+
+    // Set Cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
+
     res.json({
-      token: generateToken(user._id),
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
+        isAdmin: user.role === 'admin',
+        isVolunteer: user.role === 'volunteer',
       }
     });
   } else {
     res.status(401).json({ message: "Invalid email or password" });
   }
+};
+
+// @desc    Logout user / clear cookie
+// @route   POST /api/auth/logout
+const logout = (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
 };
 
 // @desc    Get user profile
@@ -69,13 +118,15 @@ const getUserProfile = async (req, res) => {
 
   if (user) {
     res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-      isAdmin: user.role === 'admin',
-      isVolunteer: user.role === 'volunteer'
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isAdmin: user.role === 'admin',
+        isVolunteer: user.role === 'volunteer'
+      }
     });
   } else {
     res.status(404).json({ message: "User not found" });
@@ -92,15 +143,22 @@ const updateProfile = async (req, res) => {
     if (user) {
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
-      user.phone = req.body.phone || user.phone;
+      // Allow clearing phone (req.body.phone can be empty string)
+      if (req.body.phone !== undefined) {
+        user.phone = req.body.phone;
+      }
       const updatedUser = await user.save();
 
       res.json({
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        token: generateToken(updatedUser._id),
+        user: {
+          _id: updatedUser._id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          role: updatedUser.role,
+          isAdmin: updatedUser.role === 'admin',
+          isVolunteer: updatedUser.role === 'volunteer'
+        }
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -120,7 +178,7 @@ const changePassword = async (req, res) => {
 
     // Verify current password first
     if (user && (await user.matchPassword(currentPassword))) {
-      user.password = newPassword; 
+      user.password = newPassword;
       await user.save();
       res.json({ message: 'Password updated successfully' });
     } else {
@@ -152,7 +210,7 @@ const requestPasswordReset = async (req, res) => {
     // 2. Save OTP to DB (Expires in 1 MINUTE)
     // Date.now() + 1 minute (60 * 1000 ms)
     user.resetPasswordOtp = otp;
-    user.resetPasswordExpire = Date.now() + 1 * 60 * 1000; 
+    user.resetPasswordExpire = Date.now() + 1 * 60 * 1000;
     await user.save();
 
     // 3. Send Email
@@ -211,7 +269,7 @@ const resetPasswordWithOtp = async (req, res) => {
     const user = await User.findOne({
       email,
       resetPasswordOtp: otp,
-      resetPasswordExpire: { $gt: Date.now() }, 
+      resetPasswordExpire: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -222,8 +280,8 @@ const resetPasswordWithOtp = async (req, res) => {
     user.password = newPassword;
     user.resetPasswordOtp = undefined;
     user.resetPasswordExpire = undefined;
-    
-    await user.save(); 
+
+    await user.save();
 
     res.json({ message: "Password reset successful" });
 
@@ -233,12 +291,13 @@ const resetPasswordWithOtp = async (req, res) => {
   }
 };
 
-module.exports = { 
-  registerUser, 
-  authUser, 
+module.exports = {
+  registerUser,
+  authUser,
   getUserProfile,
-  updateProfile, 
+  updateProfile,
   changePassword,
-  requestPasswordReset,   
-  resetPasswordWithOtp    
+  requestPasswordReset,
+  resetPasswordWithOtp,
+  logout
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useLocation } from "react-router-dom"; 
+import { useParams, Link, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -12,7 +12,7 @@ import { useExternalEvent } from "@/hooks/useExternalEvents";
 const ExternalEventDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
-  const location = useLocation(); 
+  const location = useLocation();
   const { data: event, isLoading, error } = useExternalEvent(id);
 
   const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80";
@@ -97,7 +97,7 @@ const ExternalEventDetail = () => {
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="flex items-center justify-between mb-6">
-            
+
             {/* ✅ Dynamic Back Button for Main View */}
             <Link to={backLink} className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="w-4 h-4 mr-2" /> {backText}
@@ -117,19 +117,17 @@ const ExternalEventDetail = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className={`px-4 py-2 rounded-full text-sm font-semibold uppercase ${
-                    event.type === "hackathon"
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold uppercase ${event.type === "hackathon"
                       ? "bg-destructive text-destructive-foreground"
                       : "bg-primary text-primary-foreground"
-                  } flex items-center gap-2`}>
+                    } flex items-center gap-2`}>
                     {event.type === "hackathon" ? <Trophy className="w-4 h-4" /> : null}
                     {event.type}
                   </span>
-                  <span className={`px-4 py-2 rounded-full text-sm font-semibold uppercase ${
-                    event.status === "upcoming"
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold uppercase ${event.status === "upcoming"
                       ? "bg-secondary text-secondary-foreground"
                       : "bg-muted text-muted-foreground"
-                  }`}>
+                    }`}>
                     {event.status}
                   </span>
                 </div>

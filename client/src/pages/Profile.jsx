@@ -39,7 +39,7 @@ export default function Profile() {
     form.reset({
       name: user.name || '',
       email: user.email || '',
-      phone: user.phone || '', 
+      phone: user.phone || '',
     });
   }, [user, navigate, form]);
 
@@ -47,7 +47,7 @@ export default function Profile() {
   const handleBack = () => {
     if (user?.role === 'volunteer') {
       navigate('/volunteer');
-    } 
+    }
     else {
       navigate('/');
     }
@@ -56,18 +56,18 @@ export default function Profile() {
   const onSubmit = async (data) => {
     setIsUpdating(true);
     try {
-      await apiClient.updateProfile({ 
+      await apiClient.updateProfile({
         name: data.name,
         email: data.email,
         phone: data.phone
       });
-      
+
       toast({ title: 'Success', description: 'Profile updated successfully!' });
-      
+
       setTimeout(() => {
         window.location.reload();
       }, 1000);
-      
+
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || "Update failed";
       toast({ variant: 'destructive', title: 'Update Failed', description: errorMessage });
@@ -97,15 +97,15 @@ export default function Profile() {
     <div className="min-h-screen bg-background bg-grid py-20">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
-          
-          <Card className="glass glow-box relative"> 
-            
+
+          <Card className="glass glow-box relative">
+
             {/* ✅ Updated Back Button with Logic */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="absolute top-4 left-4 text-muted-foreground hover:text-foreground"
-              onClick={handleBack} 
+              onClick={handleBack}
               title={user.role === 'volunteer' ? "Back to Dashboard" : "Back to Home"}
             >
               <ArrowLeft className="w-6 h-6" />
@@ -122,7 +122,7 @@ export default function Profile() {
                 Manage your account information
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               {/* User Info Display */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -133,7 +133,7 @@ export default function Profile() {
                     <p className="font-medium">{user.name}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Mail className="w-5 h-5 text-muted-foreground" />
                   <div>
@@ -149,7 +149,7 @@ export default function Profile() {
                     <p className="font-medium">{user.phone || "Not set"}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <Shield className="w-5 h-5 text-muted-foreground" />
                   <div>
@@ -177,7 +177,7 @@ export default function Profile() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="email"
@@ -199,22 +199,22 @@ export default function Profile() {
                         <FormItem>
                           <FormLabel>Phone Number</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="tel" 
-                              placeholder="+91 9876543210" 
-                              className="bg-input border-border" 
-                              {...field} 
+                            <Input
+                              type="tel"
+                              placeholder="+91 1234567890"
+                              className="bg-input border-border"
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <Button type="submit" disabled={isUpdating}>
                       {isUpdating ? (
                         <> <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating... </>
-                      ) : ( 'Update Profile' )}
+                      ) : ('Update Profile')}
                     </Button>
                   </form>
                 </Form>
@@ -222,15 +222,15 @@ export default function Profile() {
 
               {/* Logout Button */}
               <div className="border-t pt-6">
-                <Button 
-                  variant="destructive" 
-                  onClick={handleLogout} 
+                <Button
+                  variant="destructive"
+                  onClick={handleLogout}
                   disabled={isLoading}
                   className="w-full"
                 >
                   {isLoading ? (
                     <> <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Signing out... </>
-                  ) : ( 'Sign Out' )}
+                  ) : ('Sign Out')}
                 </Button>
               </div>
             </CardContent>

@@ -8,7 +8,7 @@ const getAdminOverview = async (req, res) => {
   const totalEvents = await Event.countDocuments();
   const totalUsers = await User.countDocuments();
   const totalVolunteers = await User.countDocuments({ role: "volunteer" });
-  const totalRegistrations = await Registration.countDocuments();
+  const totalRegistrations = await Registration.countDocuments({ status: { $ne: 'cancelled' } });
 
   res.json({
     totalEvents,
@@ -22,7 +22,7 @@ const getAdminOverview = async (req, res) => {
 // @route   GET /api/admin/volunteers
 const getVolunteers = async (req, res) => {
   const volunteers = await User.find({ role: "volunteer" }).populate("assignedEventId", "title");
-  
+
   // Format data for frontend
   const formattedVolunteers = volunteers.map(vol => ({
     _id: vol._id,

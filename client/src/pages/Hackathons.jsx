@@ -45,9 +45,9 @@ const Hackathons = () => {
     const today = startOfDay(new Date());
     const eventDay = startOfDay(new Date(date));
 
-    if (eventDay > today) return 1; 
-    if (eventDay.getTime() === today.getTime()) return 2; 
-    return 3; 
+    if (eventDay > today) return 1;
+    if (eventDay.getTime() === today.getTime()) return 2;
+    return 3;
   };
 
   const filteredEvents = events?.filter((event) => {
@@ -83,20 +83,20 @@ const Hackathons = () => {
 
     return matchesStatus && matchesSearch;
   }).sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      const categoryA = getEventCategory(dateA);
-      const categoryB = getEventCategory(dateB);
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    const categoryA = getEventCategory(dateA);
+    const categoryB = getEventCategory(dateB);
 
-      if (categoryA !== categoryB) {
-        return categoryA - categoryB;
-      }
+    if (categoryA !== categoryB) {
+      return categoryA - categoryB;
+    }
 
-      if (categoryA === 3) {
-         return dateB - dateA;
-      } else {
-         return dateA - dateB;
-      }
+    if (categoryA === 3) {
+      return dateB - dateA;
+    } else {
+      return dateA - dateB;
+    }
   });
 
   const getPageTitle = () => {
@@ -105,6 +105,7 @@ const Hackathons = () => {
     return "All";
   };
 
+  const buttonClasses = "bg-blue-600 text-white dark:text-black hover:bg-blue-700 shadow-md shadow-blue-500/20";
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -144,11 +145,10 @@ const Hackathons = () => {
                 <button
                   key={tab}
                   onClick={() => handleFilterChange(tab)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                    filter === tab
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${filter === tab
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
@@ -199,7 +199,7 @@ const Hackathons = () => {
                           <Trophy className="w-3 h-3" />
                           Hackathon
                         </span>
-                        
+
                         <span className={cn(
                           "px-3 py-1 rounded-full text-xs font-semibold uppercase",
                           displayStatus === "Upcoming" && "bg-blue-600 text-white",
@@ -240,10 +240,11 @@ const Hackathons = () => {
                       </div>
 
                       {/* ✅ FIXED: Button-looking DIV (No nested <a> tags) */}
-                      <div 
+                      <div
                         className={cn(
-                          buttonVariants({ variant: displayStatus === "Past" ? "secondary" : "default" }),
-                          "w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                          "h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                          "w-full",
+                          buttonClasses // Now handles dark/light text color
                         )}
                       >
                         {displayStatus === "Past" ? "View Details" : "View Details"}

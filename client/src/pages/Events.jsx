@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Link, useSearchParams } from "react-router-dom"; 
-import { format, isValid, isPast, isToday, startOfDay } from "date-fns"; 
+import { Link, useSearchParams } from "react-router-dom";
+import { format, isValid, isPast, isToday, startOfDay } from "date-fns";
 import { Calendar, MapPin, Users, ArrowRight, Search, Loader2 } from "lucide-react";
-import { Helmet } from "react-helmet-async"; 
+import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Button, buttonVariants } from "@/components/ui/button"; 
-import { cn } from "@/lib/utils"; 
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -65,22 +65,22 @@ const Events = () => {
     const today = startOfDay(new Date());
     const eventDay = startOfDay(new Date(date));
 
-    if (eventDay > today) return 1; 
-    if (eventDay.getTime() === today.getTime()) return 2; 
-    return 3; 
+    if (eventDay > today) return 1;
+    if (eventDay.getTime() === today.getTime()) return 2;
+    return 3;
   };
 
   const filteredEvents = events
     .filter((event) => {
       const eventDate = new Date(event.dateTime || event.date);
       const isDateValid = isValid(eventDate);
-      
+
       let computedStatus = event.status;
       if (isDateValid) {
         if (isPast(eventDate) && !isToday(eventDate)) {
-            computedStatus = 'past';
+          computedStatus = 'past';
         } else if (!computedStatus) {
-            computedStatus = 'upcoming';
+          computedStatus = 'upcoming';
         }
       }
       if (!computedStatus) computedStatus = 'upcoming';
@@ -94,11 +94,11 @@ const Events = () => {
       const dateStrLong = isDateValid ? format(eventDate, "MMMM d yyyy").toLowerCase() : "";
 
       const matchesSearch =
-        event.title?.toLowerCase().includes(term) ||          
-        event.venue?.toLowerCase().includes(term) ||          
-        event.description?.toLowerCase().includes(term) ||    
-        dateStrShort.includes(term) ||                        
-        dateStrLong.includes(term);                           
+        event.title?.toLowerCase().includes(term) ||
+        event.venue?.toLowerCase().includes(term) ||
+        event.description?.toLowerCase().includes(term) ||
+        dateStrShort.includes(term) ||
+        dateStrLong.includes(term);
 
       return matchesStatus && matchesSearch;
     })
@@ -114,16 +114,16 @@ const Events = () => {
       }
 
       if (categoryA === 3) {
-         return dateB - dateA;
+        return dateB - dateA;
       } else {
-         return dateA - dateB;
+        return dateA - dateB;
       }
     });
 
   const getPageTitle = () => {
-      if (filter === "upcoming") return "Upcoming";
-      if (filter === "past") return "Past";
-      return "All";
+    if (filter === "upcoming") return "Upcoming";
+    if (filter === "past") return "Past";
+    return "All";
   };
 
   return (
@@ -133,7 +133,7 @@ const Events = () => {
       </Helmet>
 
       <Navbar />
-      
+
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -144,7 +144,7 @@ const Events = () => {
               {getPageTitle()} <span className="text-blue-600">Code Builders Events</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Find the perfect event to level up your skills and connect with 
+              Find the perfect event to level up your skills and connect with
               fellow developers.
             </p>
           </div>
@@ -166,11 +166,10 @@ const Events = () => {
                 <button
                   key={tab}
                   onClick={() => handleFilterChange(tab)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                    filter === tab
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${filter === tab
                       ? "bg-blue-600 text-white"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
@@ -187,24 +186,24 @@ const Events = () => {
           {!isLoading && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEvents.map((event, index) => {
-                
+
                 const rawDate = event.dateTime || event.date;
                 const eventDateObj = new Date(rawDate);
                 const isDateValid = isValid(eventDateObj);
                 const isEventToday = isToday(eventDateObj);
-                const isEventPast = isPast(eventDateObj); 
-                
+                const isEventPast = isPast(eventDateObj);
+
                 let displayStatus = event.status;
                 if (isDateValid) {
-                   if (isEventToday) {
-                     displayStatus = 'Today';
-                   } else {
-                     displayStatus = isEventPast ? 'Past' : 'Upcoming';
-                   }
+                  if (isEventToday) {
+                    displayStatus = 'Today';
+                  } else {
+                    displayStatus = isEventPast ? 'Past' : 'Upcoming';
+                  }
                 }
 
                 const isPastEvent = displayStatus === 'Past';
-                
+
                 // ✅ UPDATED: Added dark:text-black logic
                 const buttonClasses = "bg-blue-600 text-white dark:text-black hover:bg-blue-700 shadow-md shadow-blue-500/20";
 
@@ -221,7 +220,7 @@ const Events = () => {
                       <img
                         src={displayImage}
                         alt={event.title}
-                        onError={handleImageError} 
+                        onError={handleImageError}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                       <div className="absolute top-4 right-4">
@@ -253,16 +252,16 @@ const Events = () => {
                           <MapPin className="w-4 h-4 text-blue-600" />
                           <span className="truncate max-w-[100px]">{event.venue}</span>
                         </div>
-                        {(event.max_attendees || event.maxAttendees) && (
+                        {(event.maxAttendees) && (
                           <div className="flex items-center gap-1">
                             <Users className="w-4 h-4 text-blue-600" />
-                            {event.maxAttendees || event.max_attendees}+ spots
+                            {Math.max(0, event.maxAttendees - (event.registrationCount || 0))} spots left
                           </div>
                         )}
                       </div>
 
                       {/* ✅ FORCE BLUE BUTTON */}
-                      <div 
+                      <div
                         className={cn(
                           "h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                           "w-full",
@@ -272,7 +271,7 @@ const Events = () => {
                         {isPastEvent ? "View Details" : "Register Now"}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </div>
-                      
+
                     </div>
                   </Link>
                 );
@@ -284,7 +283,7 @@ const Events = () => {
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg">No events found matching your criteria.</p>
               {filter !== 'all' && (
-                  <Button variant="link" onClick={() => handleFilterChange('all')} className="text-blue-600">View All Events</Button>
+                <Button variant="link" onClick={() => handleFilterChange('all')} className="text-blue-600">View All Events</Button>
               )}
             </div>
           )}

@@ -2,16 +2,10 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 
 const apiUrl = import.meta.env.VITE_API_URL;
-// Create axios instance with base URL
-const api = axios.create({ baseURL: `${apiUrl}` });
-
-// ✅ Interceptor checks BOTH storages
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+// Create axios instance with base URL (if used anywhere else)
+const api = axios.create({
+  baseURL: `${apiUrl}`,
+  withCredentials: true // ✅ Send cookies with requests
 });
 
 const AuthContext = createContext(undefined);
@@ -32,25 +26,18 @@ export function AuthProvider({ children }) {
   // ✅ Initialization Logic
   useEffect(() => {
     const initAuth = async () => {
-      // Check both storages for an existing token
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      
-      if (token) {
-        try {
-          const res = await api.get('/auth/me'); 
-          const userData = res.data;
-          
-          setUser(userData);
-          setSession({ access_token: token });
-          checkRoles(userData);
-        } catch (error) {
-          console.error('Error restoring session:', error);
-          // Clear both on error
-          localStorage.removeItem('token');
-          sessionStorage.removeItem('token');
-          setUser(null);
-          setSession(null);
-        }
+      try {
+        // Just call the API. If cookie exists, it will return user.
+        const res = await api.get('/auth/me');
+        const userData = res.data.user;
+
+        setUser(userData);
+        setSession({ isActive: true }); // Dummy session object
+        checkRoles(userData);
+      } catch (error) {
+        // Not logged in
+        setUser(null);
+        setSession(null);
       }
       setIsLoading(false);
     };
@@ -65,18 +52,13 @@ export function AuthProvider({ children }) {
         name,
         email,
         password,
-        phone, // ✅ Send phone to backend
+        phone,
       });
 
-      const { token, user: userData } = res.data;
-
-      // Default to LocalStorage for Sign Up (or you can use session based on logic)
-      // Usually sign up implies "I want to be logged in"
-      localStorage.setItem('token', token);
-      sessionStorage.removeItem('token'); 
+      const userData = res.data; // Response doesn't contain token anymore
 
       setUser(userData);
-      setSession({ access_token: token });
+      setSession({ isActive: true });
       checkRoles(userData);
 
       return { error: null };
@@ -91,26 +73,17 @@ export function AuthProvider({ children }) {
   const signIn = async (email, password, rememberMe) => {
     try {
       const res = await api.post('/auth/login', { email, password });
-      
-      const { token, user: userData } = res.data;
-      
-      // Handle Storage based on "Remember Me"
-      if (rememberMe) {
-        localStorage.setItem('token', token);
-        sessionStorage.removeItem('token'); // Clean up session if moving to local
-      } else {
-        sessionStorage.setItem('token', token);
-        localStorage.removeItem('token'); // Clean up local if moving to session
-      }
-      
+
+      const { user: userData } = res.data; // Response doesn't contain token anymore
+
       setUser(userData);
-      setSession({ access_token: token });
+      setSession({ isActive: true });
       checkRoles(userData);
-      
+
       return { error: null };
     } catch (error) {
-      return { 
-        error: error.response?.data?.message || error.message || "Login failed" 
+      return {
+        error: error.response?.data?.message || error.message || "Login failed"
       };
     }
   };
@@ -118,16 +91,10 @@ export function AuthProvider({ children }) {
   // ✅ SignOut calls API before clearing storage
   const signOut = async () => {
     try {
-      // 1. Notify Backend to set isLoggedIn: false
-      if (user?._id) {
-        await api.post('/auth/logout', { userId: user._id }); 
-      }
+      await api.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // 2. Clear Local State & Storage regardless of API success
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
       setUser(null);
       setSession(null);
       setIsAdmin(false);

@@ -39,7 +39,7 @@ export default function Signup() {
 
   const form = useForm({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: '', email: '', phone: '', password: '', confirmPassword: '' }, // ✅ Default value
+    defaultValues: { name: '', email: '', phone: '', password: '', confirmPassword: '' },
   });
 
   const onSubmit = async (data) => {

@@ -25,7 +25,7 @@ const createUser = async (req, res) => {
     }
 
     // If admin provided a password, use it; otherwise default to '123456'
-    const finalPassword = password || "123456"; 
+    const finalPassword = password || "123456";
 
     const user = await User.create({
       name,
@@ -41,6 +41,7 @@ const createUser = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       });
     } else {
@@ -60,8 +61,11 @@ const updateUser = async (req, res) => {
     if (user) {
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
-      user.phone = req.body.phone || user.phone;
-      
+
+      if (req.body.phone !== undefined) {
+        user.phone = req.body.phone;
+      }
+
       if (req.body.isActive !== undefined) {
         user.isActive = req.body.isActive;
       }
@@ -78,6 +82,7 @@ const updateUser = async (req, res) => {
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
+        phone: updatedUser.phone,
         isActive: updatedUser.isActive,
       });
     } else {

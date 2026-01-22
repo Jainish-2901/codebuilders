@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Github, Linkedin, Mail, Phone, MapPin, LogIn } from "lucide-react";
+import { Github, Linkedin, Instagram, Mail, Phone, MapPin, LogIn } from "lucide-react";
 
 export function Footer() {
   // Defined links array to easily handle the Login path
@@ -34,11 +34,14 @@ export function Footer() {
               and level up your skills.
             </p>
             <div className="flex gap-4 mt-6">
-              <a href="https://github.com/CodeBuilders-BCA" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
-                <Github className="w-5 h-5" />
+              <a href="https://www.instagram.com/codebuilders.bca" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                <Instagram className="w-5 h-5" />
               </a>
               <a href="https://www.linkedin.com/in/code-builders-bca-74b131355" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                 <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="https://github.com/CodeBuilders-BCA" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                <Github className="w-5 h-5" />
               </a>
               <a href="mailto:codebuilders100@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
                 <Mail className="w-5 h-5" />
